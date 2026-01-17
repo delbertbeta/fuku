@@ -10,7 +10,7 @@ initializeDatabase();
 
 const clothingSchema = z.object({
   name: z.string().min(1),
-  category: z.string().min(1),
+  category: z.coerce.number().int().positive(),
   description: z.string().optional(),
   price: z.number().positive().optional(),
   purchase_date: z.string().optional(),
@@ -32,15 +32,20 @@ export async function GET(request: NextRequest) {
     const category = searchParams.get("category");
 
     const db = getDb();
-    let query = "SELECT * FROM clothing_items WHERE user_id = ?";
+    let query = `
+      SELECT ci.*, cc.name as category_name
+      FROM clothing_items ci
+      LEFT JOIN clothing_categories cc ON ci.category = cc.id
+      WHERE ci.user_id = ?
+    `;
     const params: any[] = [session.user_id];
 
     if (category) {
-      query += " AND category = ?";
-      params.push(category);
+      query += " AND ci.category = ?";
+      params.push(parseInt(category));
     }
 
-    query += " ORDER BY created_at DESC";
+    query += " ORDER BY ci.created_at DESC";
 
     const stmt = db.prepare(query);
     const items = stmt.all(...params);
@@ -83,11 +88,12 @@ export async function POST(request: NextRequest) {
     }
 
     const db = getDb();
+    const categoryId = parseInt(category);
 
     const categoryStmt = db.prepare(
-      "SELECT id FROM clothing_categories WHERE user_id = ? AND name = ?"
+      "SELECT id FROM clothing_categories WHERE id = ? AND user_id = ?"
     );
-    const categoryExists = categoryStmt.get(session.user_id, category);
+    const categoryExists = categoryStmt.get(categoryId, session.user_id);
     if (!categoryExists) {
       return NextResponse.json({ error: "Invalid category" }, { status: 400 });
     }
@@ -113,14 +119,22 @@ export async function POST(request: NextRequest) {
     const item = stmt.get(
       session.user_id,
       name,
-      category,
+      categoryId,
       description || null,
       imagePath,
       price ? parseFloat(price) : null,
       purchaseDate || null
     );
 
-    return NextResponse.json({ item }, { status: 201 });
+    const resultItem = item as any;
+    const categoryInfo = db
+      .prepare("SELECT name FROM clothing_categories WHERE id = ?")
+      .get(resultItem.category) as any;
+
+    return NextResponse.json(
+      { item: { ...resultItem, category_name: categoryInfo?.name } },
+      { status: 201 }
+    );
   } catch (error) {
     console.error("Create clothing error:", error);
     return NextResponse.json(

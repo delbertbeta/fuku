@@ -33,7 +33,7 @@ export function initializeSchema(): void {
     CREATE TABLE IF NOT EXISTS clothing_items (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-      category TEXT NOT NULL,
+      category INTEGER NOT NULL REFERENCES clothing_categories(id),
       name TEXT NOT NULL,
       description TEXT,
       image_path TEXT NOT NULL,
@@ -68,6 +68,7 @@ export function initializeSchema(): void {
   `);
 
   migrateCategories(db);
+  migrateCategoryToId(db);
 }
 
 function migrateCategories(db: Database.Database): void {
@@ -103,5 +104,61 @@ function migrateCategories(db: Database.Database): void {
         insertCategory.run(user.id, cat.name);
       }
     }
+  }
+}
+
+function migrateCategoryToId(db: Database.Database): void {
+  const columns = db.prepare("PRAGMA table_info(clothing_items)").all();
+  const categoryColumn = (columns as any[]).find(
+    (col: any) => col.name === "category"
+  );
+
+  if (categoryColumn && categoryColumn.type === "INTEGER") {
+    return;
+  }
+
+  try {
+    db.exec(`
+      CREATE TABLE clothing_items_new (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        category INTEGER NOT NULL REFERENCES clothing_categories(id),
+        name TEXT NOT NULL,
+        description TEXT,
+        image_path TEXT NOT NULL,
+        price DECIMAL(10, 2),
+        purchase_date DATE,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(user_id, name)
+      );
+
+      INSERT INTO clothing_items_new (
+        id, user_id, category, name, description, image_path,
+        price, purchase_date, created_at, updated_at
+      )
+      SELECT
+        ci.id,
+        ci.user_id,
+        COALESCE(cc.id, 0) as category,
+        ci.name,
+        ci.description,
+        ci.image_path,
+        ci.price,
+        ci.purchase_date,
+        ci.created_at,
+        ci.updated_at
+      FROM clothing_items ci
+      LEFT JOIN clothing_categories cc
+        ON ci.category = cc.name AND ci.user_id = cc.user_id;
+
+      DROP TABLE clothing_items;
+      ALTER TABLE clothing_items_new RENAME TO clothing_items;
+
+      CREATE INDEX IF NOT EXISTS idx_clothing_items_user_id ON clothing_items(user_id);
+      CREATE INDEX IF NOT EXISTS idx_clothing_items_category ON clothing_items(category);
+    `);
+  } catch (error) {
+    console.error("Error migrating category to ID:", error);
   }
 }
