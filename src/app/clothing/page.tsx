@@ -40,7 +40,7 @@ function ClothingContent() {
         <h2 className="text-2xl font-bold">我的服装</h2>
         <Link
           href="/clothing/new"
-          className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 min-h-[44px] inline-block"
+          className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 inline-block"
         >
           添加服装
         </Link>
@@ -85,6 +85,16 @@ function ClothingContent() {
               <p className="text-sm text-gray-500 capitalize">
                 {item.category_name || item.category}
               </p>
+              {item.description && (
+                <p className="text-xs text-gray-400 mt-1 truncate">
+                  {item.description}
+                </p>
+              )}
+              {item.price && (
+                <p className="text-sm font-semibold text-blue-600 mt-1">
+                  ¥{item.price.toFixed(2)}
+                </p>
+              )}
             </div>
           </div>
         ))}

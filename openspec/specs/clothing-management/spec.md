@@ -160,28 +160,15 @@ The system MUST allow users to upload images for clothing items.
 
 ### Requirement: Clothing Item Listing
 
-The system MUST allow users to view a list of their clothing items.
+The system MUST allow users to view a list of their clothing items with comprehensive information.
 
 #### Scenario: View All Clothing Items
 
-**Given** the user has created multiple clothing items
+**Given** the user has created multiple clothing items with various attributes
 **When** the user navigates to the clothing list page
 **Then** all clothing items should be displayed
-**And** each item should show the image, name, and category
+**And** each item should show the image, name, category, description (if present), and price (if present)
 **And** items should be ordered by creation date (newest first)
-
-#### Scenario: Filter by Category
-
-**Given** the user has clothing items in multiple categories
-**When** the user selects the "top" category filter
-**Then** only clothing items with category "top" should be displayed
-**And** the filter indicator should be visible
-
-#### Scenario: Clear Category Filter
-
-**Given** the user has filtered clothing items by category
-**When** the user clears the filter
-**Then** all clothing items should be displayed again
 
 ### Requirement: Clothing Item Details
 
@@ -329,4 +316,30 @@ The clothing API MUST accept and return category IDs instead of category names.
 **When** the request is successful
 **Then** the response should include the clothing item with category_id
 **And** the response should include the category name for display
+
+### Requirement: Display Clothing Item Additional Info
+
+The clothing item listing page MUST display additional information about each item including description and price when available.
+
+#### Scenario: Display Clothing Item with Description and Price
+
+**Given** a clothing item exists with name "Blue Shirt", description "A comfortable cotton shirt", and price 29.99
+**When** the user views the clothing list page
+**Then** the item card should display the description (possibly truncated if too long)
+**And** the item card should display the price "¥29.99" or "$29.99"
+**And** the description and price should be visually distinct from the item name
+
+#### Scenario: Display Clothing Item without Optional Fields
+
+**Given** a clothing item exists with only name and category (no description or price)
+**When** the user views the clothing list page
+**Then** the item card should display normally without showing empty description or price
+**And** the layout should remain consistent with items that have additional fields
+
+#### Scenario: Responsive Display of Additional Info
+
+**Given** a clothing item has description and price
+**When** the user views the clothing list on a mobile device (width < 640px)
+**Then** the description should be displayed with appropriate length limit (e.g., 50 characters)
+**And** all information should remain legible and properly spaced
 

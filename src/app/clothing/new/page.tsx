@@ -69,7 +69,7 @@ export default function ClothingNewPage() {
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full p-3 border rounded-md min-h-[44px]"
+              className="w-full p-3 border rounded-md"
               required
             />
           </div>
@@ -79,7 +79,7 @@ export default function ClothingNewPage() {
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="w-full p-3 border rounded-md min-h-[44px]"
+              className="w-full p-3 border rounded-md"
               required
             >
               {categories.map((cat) => (
@@ -107,7 +107,7 @@ export default function ClothingNewPage() {
               step="0.01"
               value={price}
               onChange={(e) => setPrice(e.target.value)}
-              className="w-full p-3 border rounded-md min-h-[44px]"
+              className="w-full p-3 border rounded-md"
             />
           </div>
 
@@ -125,7 +125,7 @@ export default function ClothingNewPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-500 text-white py-3 rounded-md hover:bg-blue-600 disabled:bg-gray-400 min-h-[44px]"
+            className="w-full bg-blue-500 text-white py-3 rounded-md hover:bg-blue-600 disabled:bg-gray-400"
           >
             {loading ? "保存中..." : "保存"}
           </button>

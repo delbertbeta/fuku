@@ -116,13 +116,13 @@ function CategoryManagement() {
           value={newCategoryName}
           onChange={(e) => setNewCategoryName(e.target.value)}
           placeholder="新分类名称"
-          className="flex-1 p-3 border rounded-md min-h-[44px]"
+          className="flex-1 p-3 border rounded-md"
           disabled={adding}
         />
         <button
           onClick={handleAddCategory}
           disabled={adding || !newCategoryName.trim()}
-          className="px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-gray-400 min-h-[44px]"
+          className="px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-gray-400"
         >
           {adding ? "添加中..." : "添加"}
         </button>

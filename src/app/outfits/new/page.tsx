@@ -7,6 +7,7 @@ import Link from "next/link";
 export default function OutfitNewPage() {
   const [clothingItems, setClothingItems] = useState<any[]>([]);
   const [selectedClothing, setSelectedClothing] = useState<number[]>([]);
+  const [outfitName, setOutfitName] = useState<string>("");
   const router = useRouter();
 
   const loadData = async () => {
@@ -20,16 +21,21 @@ export default function OutfitNewPage() {
   }, []);
 
   const handleCreateOutfit = async () => {
+    if (!outfitName.trim()) {
+      alert("请输入穿搭名称");
+      return;
+    }
     const response = await fetch("/api/outfits", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        name: `Outfit ${clothingItems.length + 1}`,
+        name: outfitName,
         clothing_ids: selectedClothing,
       }),
     });
     if (response.ok) {
       setSelectedClothing([]);
+      setOutfitName("");
       router.push("/outfits");
     }
   };
@@ -44,6 +50,17 @@ export default function OutfitNewPage() {
       </Link>
       <div className="max-w-md mx-auto">
         <h2 className="text-xl font-bold mb-4">创建穿搭</h2>
+        <div className="mb-4">
+          <label className="block text-sm font-medium mb-1">穿搭名称 *</label>
+          <input
+            type="text"
+            value={outfitName}
+            onChange={(e) => setOutfitName(e.target.value)}
+            placeholder="输入穿搭名称"
+            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            maxLength={100}
+          />
+        </div>
         <div className="space-y-2 mb-4">
           {clothingItems.map((item) => (
             <label
@@ -76,7 +93,7 @@ export default function OutfitNewPage() {
         <button
           onClick={handleCreateOutfit}
           disabled={selectedClothing.length === 0}
-          className="w-full bg-blue-500 text-white py-3 rounded-md hover:bg-blue-600 disabled:bg-gray-400 min-h-[44px]"
+          className="w-full bg-blue-500 text-white py-3 rounded-md hover:bg-blue-600 disabled:bg-gray-400"
         >
           创建穿搭（{selectedClothing.length}件）
         </button>

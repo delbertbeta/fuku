@@ -47,7 +47,7 @@ export default function OutfitsPage() {
         <h2 className="text-2xl font-bold">我的穿搭</h2>
         <Link
           href="/outfits/new"
-          className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 min-h-[44px] inline-block"
+          className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 inline-block"
         >
           创建穿搭
         </Link>
@@ -69,6 +69,16 @@ export default function OutfitsPage() {
                     className="w-full aspect-square object-cover rounded-md"
                   />
                   <p className="text-xs mt-1 truncate">{item.name}</p>
+                  {item.category_name && (
+                    <p className="text-xs text-gray-500">
+                      {item.category_name}
+                    </p>
+                  )}
+                  {item.price && (
+                    <p className="text-xs font-semibold text-blue-600">
+                      ¥{item.price.toFixed(2)}
+                    </p>
+                  )}
                 </div>
               ))}
             </div>

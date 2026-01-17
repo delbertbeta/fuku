@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getSession } from '@/lib/auth';
-import { getDb } from '@/lib/db';
-import { initializeDatabase } from '@/lib/db';
-import { z } from 'zod';
+import { NextRequest, NextResponse } from "next/server";
+import { getSession } from "@/lib/auth";
+import { getDb } from "@/lib/db";
+import { initializeDatabase } from "@/lib/db";
+import { z } from "zod";
 
 initializeDatabase();
 
@@ -13,35 +13,63 @@ const outfitSchema = z.object({
 
 export async function GET(request: NextRequest) {
   try {
-    const sessionCookie = request.cookies.get('session');
+    const sessionCookie = request.cookies.get("session");
     if (!sessionCookie) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const session = getSession(sessionCookie.value);
     if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const db = getDb();
-    const stmt = db.prepare(
-      'SELECT * FROM outfits WHERE user_id = ? ORDER BY created_at DESC'
-    );
-    const outfits = stmt.all(session.user_id);
+    const stmt = db.prepare(`
+      SELECT o.id, o.name, o.description, o.created_at,
+             ci.id as item_id, ci.name as item_name, ci.image_path,
+             ci.price, ci.description as item_description,
+             cc.name as category_name
+      FROM outfits o
+      LEFT JOIN outfit_items oi ON o.id = oi.outfit_id
+      LEFT JOIN clothing_items ci ON oi.clothing_id = ci.id
+      LEFT JOIN clothing_categories cc ON ci.category = cc.id
+      WHERE o.user_id = ?
+      ORDER BY o.created_at DESC
+    `);
+    const rows = stmt.all(session.user_id);
 
-    for (const outfit of outfits as any[]) {
-      const itemStmt = db.prepare(
-        'SELECT clothing_id FROM outfit_items WHERE outfit_id = ?'
-      );
-      const clothingIds = itemStmt.all(outfit.id);
-      outfit.clothing_ids = clothingIds.map((i: any) => i.clothing_id);
+    const outfitsMap = new Map<number, any>();
+
+    for (const row of rows as any[]) {
+      if (!outfitsMap.has(row.id)) {
+        outfitsMap.set(row.id, {
+          id: row.id,
+          name: row.name,
+          description: row.description,
+          created_at: row.created_at,
+          clothing_items: [],
+        });
+      }
+
+      if (row.item_id) {
+        outfitsMap.get(row.id).clothing_items.push({
+          id: row.item_id,
+          name: row.item_name,
+          image_path: row.image_path,
+          price: row.price,
+          description: row.item_description,
+          category_name: row.category_name,
+        });
+      }
     }
+
+    const outfits = Array.from(outfitsMap.values());
 
     return NextResponse.json({ outfits });
   } catch (error) {
-    console.error('Get outfits error:', error);
+    console.error("Get outfits error:", error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }
@@ -49,14 +77,14 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const sessionCookie = request.cookies.get('session');
+    const sessionCookie = request.cookies.get("session");
     if (!sessionCookie) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const session = getSession(sessionCookie.value);
     if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const body = await request.json();
@@ -70,36 +98,46 @@ export async function POST(request: NextRequest) {
 
     const { name, description, clothing_ids } = body;
 
-    if (!clothing_ids || !Array.isArray(clothing_ids) || clothing_ids.length === 0) {
+    if (
+      !clothing_ids ||
+      !Array.isArray(clothing_ids) ||
+      clothing_ids.length === 0
+    ) {
       return NextResponse.json(
-        { error: 'At least one clothing item is required' },
+        { error: "At least one clothing item is required" },
         { status: 400 }
       );
     }
 
     const db = getDb();
     const insertStmt = db.prepare(
-      'INSERT INTO outfits (user_id, name, description) VALUES (?, ?, ?) RETURNING *'
+      "INSERT INTO outfits (user_id, name, description) VALUES (?, ?, ?) RETURNING *"
     );
-    const outfit = insertStmt.get(session.user_id, name, description || null) as any;
+    const outfit = insertStmt.get(
+      session.user_id,
+      name,
+      description || null
+    ) as any;
 
     const insertItemStmt = db.prepare(
-      'INSERT INTO outfit_items (outfit_id, clothing_id) VALUES (?, ?)'
+      "INSERT INTO outfit_items (outfit_id, clothing_id) VALUES (?, ?)"
     );
 
-    const insertMany = db.transaction((outfitId: number, clothingIds: number[]) => {
-      for (const clothingId of clothingIds) {
-        insertItemStmt.run(outfitId, clothingId);
+    const insertMany = db.transaction(
+      (outfitId: number, clothingIds: number[]) => {
+        for (const clothingId of clothingIds) {
+          insertItemStmt.run(outfitId, clothingId);
+        }
       }
-    });
+    );
 
     insertMany(outfit.id, clothing_ids);
 
     return NextResponse.json({ outfit }, { status: 201 });
   } catch (error) {
-    console.error('Create outfit error:', error);
+    console.error("Create outfit error:", error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }
