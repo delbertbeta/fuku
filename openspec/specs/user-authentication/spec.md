@@ -1,8 +1,11 @@
 # user-authentication Specification
 
 ## Purpose
+
 TBD - created by archiving change establish-outfit-platform. Update Purpose after archive.
+
 ## Requirements
+
 ### Requirement: User Registration
 
 The system MUST allow users to register a new account with email and password to access the platform.
@@ -225,4 +228,3 @@ The system MUST support disabling user registration through an environment varia
 **When** the user attempts to login with valid credentials
 **Then** login should succeed
 **And** the user should be authenticated normally
-

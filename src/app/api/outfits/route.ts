@@ -3,7 +3,6 @@ import { getSession } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { z } from "zod";
 
-
 const outfitSchema = z.object({
   name: z.string().min(1),
   description: z.string().optional(),

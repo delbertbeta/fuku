@@ -4,7 +4,6 @@ import { getUserByEmail } from "@/lib/auth";
 import { verifyPassword, createSession } from "@/lib/auth";
 import { cookies } from "next/headers";
 
-
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().min(1, "Password is required"),

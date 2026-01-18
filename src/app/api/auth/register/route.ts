@@ -4,7 +4,6 @@ import { createUser, getUserByEmail, createSession } from "@/lib/auth";
 import { hashPassword, validateEmail, validatePassword } from "@/lib/auth";
 import { cookies } from "next/headers";
 
-
 const registerSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().min(8, "Password must be at least 8 characters"),

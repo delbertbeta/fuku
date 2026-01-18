@@ -5,7 +5,6 @@ import { uploadImage } from "@/lib/storage";
 import { z } from "zod";
 import sharp from "sharp";
 
-
 const clothingSchema = z.object({
   name: z.string().min(1),
   category: z.coerce.number().int().positive(),

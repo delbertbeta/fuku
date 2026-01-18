@@ -3,7 +3,9 @@
 ## Purpose
 
 TBD - created by archiving change establish-outfit-platform. Update Purpose after archive.
+
 ## Requirements
+
 ### Requirement: Clothing Item Creation
 
 The system MUST allow users to create new clothing items with required and optional information.
@@ -416,4 +418,3 @@ The clothing item listing page MUST display additional information about each it
 **When** the user views the clothing list on a mobile device (width < 640px)
 **Then** the description should be displayed with appropriate length limit (e.g., 50 characters)
 **And** all information should remain legible and properly spaced
-

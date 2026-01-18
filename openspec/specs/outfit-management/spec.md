@@ -3,7 +3,9 @@
 ## Purpose
 
 TBD - created by archiving change establish-outfit-platform. Update Purpose after archive.
+
 ## Requirements
+
 ### Requirement: Outfit Creation
 
 The system MUST allow users to create outfit combinations by selecting multiple clothing items and providing a name.
@@ -404,4 +406,3 @@ The system MUST allow users to filter clothing items by category when selecting 
 **When** the category filter is applied
 **Then** an empty state message should be displayed
 **And** the message should indicate no items exist in this category
-

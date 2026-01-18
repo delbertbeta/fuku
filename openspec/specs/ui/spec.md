@@ -3,7 +3,9 @@
 ## Purpose
 
 TBD - created by archiving change localize-ui-to-chinese. Update Purpose after archive.
+
 ## Requirements
+
 ### Requirement: Root layout language setting
 
 The root layout SHALL use Chinese language attribute with English document title.
@@ -106,4 +108,3 @@ Then all Chinese characters should display correctly
 And there should be no mojibake (garbled text)
 And the font should support Chinese characters
 And text should be legible and properly sized
-

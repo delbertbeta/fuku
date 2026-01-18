@@ -1,8 +1,11 @@
 # category-management Specification
 
 ## Purpose
+
 TBD - created by archiving change add-category-settings. Update Purpose after archive.
+
 ## Requirements
+
 ### Requirement: Category Data Model
 
 The system MUST store clothing categories with user isolation and system/user distinction.
@@ -173,4 +176,3 @@ The system MUST display categories consistently across the application.
 **And** filters should be ordered alphabetically
 **And** an "全部" (All) filter should be included
 **And** clicking a category filter should show only items in that category
-

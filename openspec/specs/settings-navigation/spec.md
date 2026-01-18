@@ -1,8 +1,11 @@
 # settings-navigation Specification
 
 ## Purpose
+
 TBD - created by archiving change add-category-settings. Update Purpose after archive.
+
 ## Requirements
+
 ### Requirement: Settings Tab Navigation
 
 The system MUST provide a settings tab in the main application navigation.
@@ -99,4 +102,3 @@ The settings tab MUST work consistently across different screen sizes.
 **Then** the content should use full screen width
 **And** the category list should use a compact, touch-friendly layout
 **And** spacing should be optimized for touch interaction
-

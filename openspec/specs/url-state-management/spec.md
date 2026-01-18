@@ -1,8 +1,11 @@
 # url-state-management Specification
 
 ## Purpose
+
 TBD - created by archiving change add-client-side-routing. Update Purpose after archive.
+
 ## Requirements
+
 ### Requirement: Tab navigation via URL paths
 
 The application SHALL use URL path segments to represent the active tab.
@@ -207,4 +210,3 @@ The application SHALL use shared layout components for header and navigation acr
 **Then** the navigation should be displayed
 **And** the navigation should be consistent in structure
 **And** the active tab should reflect the current URL path
-

@@ -1,0 +1,64 @@
+# Dependencies
+node_modules
+npm-debug.log
+yarn-error.log
+
+# Next.js
+.next
+out
+next-env.d.ts
+tsconfig.tsbuildinfo
+
+# Environment files
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+
+# Data
+data
+*.db
+*.db-shm
+*.db-wal
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Documentation
+README.md
+LICENSE
+AGENTS.md
+DOCKER_DEPLOYMENT.md
+DOCKER_RUN_EXAMPLES.md
+
+# OpenSpec
+openspec
+.opencode
+
+# Testing
+tests
+*.test.ts
+*.test.tsx
+
+# Misc
+.editorconfig
+.prettierrc
+prettier.config.js
+.eslintrc*
+eslint.config.mjs
+postcss.config.js
+tailwind.config.js

@@ -1,8 +1,11 @@
 # database-adapter Specification
 
 ## Purpose
+
 TBD - created by archiving change support-mariadb. Update Purpose after archive.
+
 ## Requirements
+
 ### Requirement: Database Type Configuration
 
 The system MUST support configuring the database backend type through environment variables.
@@ -258,4 +261,3 @@ The database adapter implementation MUST maintain TypeScript type safety across 
 **Then** the TypeScript compiler enforces that all interface methods are implemented
 **And** method signatures match the interface definition
 **And** return types are correctly typed
-

@@ -1,4 +1,4 @@
-import bcrypt from 'bcrypt';
+import bcrypt from "bcrypt";
 
 const SALT_ROUNDS = 10;
 const MIN_PASSWORD_LENGTH = 8;
@@ -14,7 +14,10 @@ export async function verifyPassword(
   return bcrypt.compare(password, hash);
 }
 
-export function validatePassword(password: string): { valid: boolean; error?: string } {
+export function validatePassword(password: string): {
+  valid: boolean;
+  error?: string;
+} {
   if (password.length < MIN_PASSWORD_LENGTH) {
     return {
       valid: false,
