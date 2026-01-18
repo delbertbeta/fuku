@@ -9,6 +9,7 @@ export default function ClothingNewPage() {
   const [category, setCategory] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
+  const [purchaseDate, setPurchaseDate] = useState("");
   const [image, setImage] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState<any[]>([]);
@@ -36,6 +37,7 @@ export default function ClothingNewPage() {
     formData.append("category", category);
     if (description) formData.append("description", description);
     if (price) formData.append("price", price);
+    if (purchaseDate) formData.append("purchase_date", purchaseDate);
 
     try {
       const response = await fetch("/api/clothing", {
@@ -107,6 +109,16 @@ export default function ClothingNewPage() {
               step="0.01"
               value={price}
               onChange={(e) => setPrice(e.target.value)}
+              className="w-full p-3 border rounded-md"
+            />
+          </div>
+
+          <div>
+            <label className="block mb-2 text-sm">购买日期</label>
+            <input
+              type="date"
+              value={purchaseDate}
+              onChange={(e) => setPurchaseDate(e.target.value)}
               className="w-full p-3 border rounded-md"
             />
           </div>

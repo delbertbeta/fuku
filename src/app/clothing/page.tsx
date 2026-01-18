@@ -74,7 +74,11 @@ function ClothingContent() {
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {items.map((item) => (
-          <div key={item.id} className="border rounded-lg overflow-hidden">
+          <Link
+            key={item.id}
+            href={`/clothing/${item.id}`}
+            className="border rounded-lg overflow-hidden hover:border-blue-500 hover:shadow-lg hover:scale-105 cursor-pointer transition-all duration-200"
+          >
             <img
               src={item.image_path}
               alt={item.name}
@@ -96,7 +100,7 @@ function ClothingContent() {
                 </p>
               )}
             </div>
-          </div>
+          </Link>
         ))}
       </div>
 

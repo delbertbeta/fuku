@@ -55,7 +55,11 @@ export default function OutfitsPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {outfits.map((outfit) => (
-          <div key={outfit.id} className="border rounded-lg p-4">
+          <Link
+            key={outfit.id}
+            href={`/outfits/${outfit.id}`}
+            className="border rounded-lg p-4 hover:border-blue-500 hover:shadow-lg hover:scale-105 cursor-pointer transition-all duration-200"
+          >
             <h3 className="font-bold text-lg mb-2">{outfit.name}</h3>
             {outfit.description && (
               <p className="text-gray-500 mb-3">{outfit.description}</p>
@@ -82,7 +86,7 @@ export default function OutfitsPage() {
                 </div>
               ))}
             </div>
-          </div>
+          </Link>
         ))}
       </div>
 
