@@ -1,3 +1,3 @@
-import { initializeDatabase } from '../src/lib/db';
+import { getDb } from "../src/lib/db";
 
-initializeDatabase();
+getDb();

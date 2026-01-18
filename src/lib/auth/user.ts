@@ -8,19 +8,22 @@ export interface User {
   updated_at: string;
 }
 
-export function createUser(email: string, passwordHash: string): User {
+export async function createUser(
+  email: string,
+  passwordHash: string
+): Promise<User> {
   const db = getDb();
   const stmt = db.prepare(
     "INSERT INTO users (email, password_hash) VALUES (?, ?) RETURNING *"
   );
-  const user = stmt.get(email, passwordHash) as User;
+  const user = (await stmt.get([email, passwordHash])) as User;
 
-  createDefaultCategoriesForUser(user.id);
+  await createDefaultCategoriesForUser(user.id);
 
   return user;
 }
 
-function createDefaultCategoriesForUser(userId: number): void {
+async function createDefaultCategoriesForUser(userId: number): Promise<void> {
   const db = getDb();
   const defaultCategories = [
     { name: "上装" },
@@ -35,18 +38,18 @@ function createDefaultCategoriesForUser(userId: number): void {
   );
 
   for (const cat of defaultCategories) {
-    insertCategory.run(userId, cat.name);
+    await insertCategory.run([userId, cat.name]);
   }
 }
 
-export function getUserByEmail(email: string): User | undefined {
+export async function getUserByEmail(email: string): Promise<User | undefined> {
   const db = getDb();
   const stmt = db.prepare("SELECT * FROM users WHERE email = ?");
-  return stmt.get(email) as User | undefined;
+  return (await stmt.get([email])) as User | undefined;
 }
 
-export function getUserById(id: number): User | undefined {
+export async function getUserById(id: number): Promise<User | undefined> {
   const db = getDb();
   const stmt = db.prepare("SELECT * FROM users WHERE id = ?");
-  return stmt.get(id) as User | undefined;
+  return (await stmt.get([id])) as User | undefined;
 }

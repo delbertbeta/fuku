@@ -1,32 +1,30 @@
-import { NextResponse } from 'next/server';
-import { deleteSession } from '@/lib/auth';
-import { initializeDatabase } from '@/lib/db';
-import { cookies } from 'next/headers';
+import { NextResponse } from "next/server";
+import { deleteSession } from "@/lib/auth";
+import { cookies } from "next/headers";
 
-initializeDatabase();
 
 export async function POST() {
   try {
     const cookieStore = await cookies();
-    const sessionId = cookieStore.get('session')?.value;
+    const sessionId = cookieStore.get("session")?.value;
 
     if (sessionId) {
-      deleteSession(sessionId);
+      await deleteSession(sessionId);
     }
 
-    cookieStore.set('session', '', {
+    cookieStore.set("session", "", {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
       maxAge: 0,
-      path: '/',
+      path: "/",
     });
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Logout error:', error);
+    console.error("Logout error:", error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }

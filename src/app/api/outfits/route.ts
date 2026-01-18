@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { getDb } from "@/lib/db";
-import { initializeDatabase } from "@/lib/db";
 import { z } from "zod";
 
-initializeDatabase();
 
 const outfitSchema = z.object({
   name: z.string().min(1),
@@ -18,7 +16,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const session = getSession(sessionCookie.value);
+    const session = await getSession(sessionCookie.value);
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -36,7 +34,7 @@ export async function GET(request: NextRequest) {
       WHERE o.user_id = ?
       ORDER BY o.created_at DESC
     `);
-    const rows = stmt.all(session.user_id);
+    const rows = await stmt.all([session.user_id]);
 
     const outfitsMap = new Map<number, any>();
 
@@ -82,7 +80,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const session = getSession(sessionCookie.value);
+    const session = await getSession(sessionCookie.value);
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -113,25 +111,20 @@ export async function POST(request: NextRequest) {
     const insertStmt = db.prepare(
       "INSERT INTO outfits (user_id, name, description) VALUES (?, ?, ?) RETURNING *"
     );
-    const outfit = insertStmt.get(
+    const outfit = (await insertStmt.get([
       session.user_id,
       name,
-      description || null
-    ) as any;
+      description || null,
+    ])) as any;
 
-    const insertItemStmt = db.prepare(
-      "INSERT INTO outfit_items (outfit_id, clothing_id) VALUES (?, ?)"
-    );
-
-    const insertMany = db.transaction(
-      (outfitId: number, clothingIds: number[]) => {
-        for (const clothingId of clothingIds) {
-          insertItemStmt.run(outfitId, clothingId);
-        }
+    await db.transaction(async () => {
+      const insertItemStmt = db.prepare(
+        "INSERT INTO outfit_items (outfit_id, clothing_id) VALUES (?, ?)"
+      );
+      for (const clothingId of clothing_ids) {
+        await insertItemStmt.run([outfit.id, clothingId]);
       }
-    );
-
-    insertMany(outfit.id, clothing_ids);
+    });
 
     return NextResponse.json({ outfit }, { status: 201 });
   } catch (error) {

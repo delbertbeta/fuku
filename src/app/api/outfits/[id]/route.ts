@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { getDb } from "@/lib/db";
-import { initializeDatabase } from "@/lib/db";
 import { z } from "zod";
 
-initializeDatabase();
 
 const outfitSchema = z.object({
   name: z.string().min(1).optional(),
@@ -22,7 +20,7 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const session = getSession(sessionCookie.value);
+    const session = await getSession(sessionCookie.value);
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -37,19 +35,19 @@ export async function GET(
     const stmt = db.prepare(
       "SELECT * FROM outfits WHERE id = ? AND user_id = ?"
     );
-    const outfit = stmt.get(idNum, session.user_id);
+    const outfit = await stmt.get([idNum, session.user_id]);
 
     if (!outfit) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
     const clothingStmt = db.prepare(
-      `SELECT ci.* 
-       FROM clothing_items ci 
-       JOIN outfit_items oi ON ci.id = oi.clothing_id 
+      `SELECT ci.*
+       FROM clothing_items ci
+       JOIN outfit_items oi ON ci.id = oi.clothing_id
        WHERE oi.outfit_id = ?`
     );
-    const clothingItems = clothingStmt.all(idNum);
+    const clothingItems = await clothingStmt.all([idNum]);
     (outfit as any).clothing_items = clothingItems;
 
     return NextResponse.json({ outfit });
@@ -72,7 +70,7 @@ export async function PUT(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const session = getSession(sessionCookie.value);
+    const session = await getSession(sessionCookie.value);
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -111,7 +109,7 @@ export async function PUT(
       const stmt = db.prepare(
         `UPDATE outfits SET ${updates.join(", ")} WHERE id = ? AND user_id = ? RETURNING *`
       );
-      const outfit = stmt.get(...values);
+      const outfit = await stmt.get(values);
 
       if (!outfit) {
         return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -121,22 +119,17 @@ export async function PUT(
         const deleteStmt = db.prepare(
           "DELETE FROM outfit_items WHERE outfit_id = ?"
         );
-        deleteStmt.run(idNum);
+        await deleteStmt.run([idNum]);
 
         if (clothing_ids.length > 0) {
-          const insertStmt = db.prepare(
-            "INSERT INTO outfit_items (outfit_id, clothing_id) VALUES (?, ?)"
-          );
-
-          const insertMany = db.transaction(
-            (outfitId: number, clothingIds: number[]) => {
-              for (const clothingId of clothingIds) {
-                insertStmt.run(outfitId, clothingId);
-              }
+          await db.transaction(async () => {
+            const insertStmt = db.prepare(
+              "INSERT INTO outfit_items (outfit_id, clothing_id) VALUES (?, ?)"
+            );
+            for (const clothingId of clothing_ids) {
+              await insertStmt.run([idNum, clothingId]);
             }
-          );
-
-          insertMany(idNum, clothing_ids);
+          });
         }
       }
 
@@ -147,26 +140,21 @@ export async function PUT(
       const deleteStmt = db.prepare(
         "DELETE FROM outfit_items WHERE outfit_id = ?"
       );
-      deleteStmt.run(idNum);
+      await deleteStmt.run([idNum]);
 
       if (clothing_ids.length > 0) {
-        const insertStmt = db.prepare(
-          "INSERT INTO outfit_items (outfit_id, clothing_id) VALUES (?, ?)"
-        );
-
-        const insertMany = db.transaction(
-          (outfitId: number, clothingIds: number[]) => {
-            for (const clothingId of clothingIds) {
-              insertStmt.run(outfitId, clothingId);
-            }
+        await db.transaction(async () => {
+          const insertStmt = db.prepare(
+            "INSERT INTO outfit_items (outfit_id, clothing_id) VALUES (?, ?)"
+          );
+          for (const clothingId of clothing_ids) {
+            await insertStmt.run([idNum, clothingId]);
           }
-        );
-
-        insertMany(idNum, clothing_ids);
+        });
       }
 
       const stmt = db.prepare("SELECT * FROM outfits WHERE id = ?");
-      const outfit = stmt.get(idNum);
+      const outfit = await stmt.get([idNum]);
       return NextResponse.json({ outfit });
     }
 
@@ -190,7 +178,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const session = getSession(sessionCookie.value);
+    const session = await getSession(sessionCookie.value);
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -205,7 +193,7 @@ export async function DELETE(
     const stmt = db.prepare(
       "DELETE FROM outfits WHERE id = ? AND user_id = ? RETURNING *"
     );
-    const outfit = stmt.get(idNum, session.user_id);
+    const outfit = await stmt.get([idNum, session.user_id]);
 
     if (!outfit) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });

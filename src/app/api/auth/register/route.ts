@@ -2,10 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createUser, getUserByEmail, createSession } from "@/lib/auth";
 import { hashPassword, validateEmail, validatePassword } from "@/lib/auth";
-import { initializeDatabase } from "@/lib/db";
 import { cookies } from "next/headers";
 
-initializeDatabase();
 
 const registerSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -50,7 +48,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const existingUser = getUserByEmail(email);
+    const existingUser = await getUserByEmail(email);
     if (existingUser) {
       return NextResponse.json(
         { error: "Email already registered" },
@@ -59,9 +57,9 @@ export async function POST(request: NextRequest) {
     }
 
     const passwordHash = await hashPassword(password);
-    const user = createUser(email, passwordHash);
+    const user = await createUser(email, passwordHash);
 
-    const session = createSession(user.id);
+    const session = await createSession(user.id);
 
     const cookieStore = await cookies();
     cookieStore.set("session", session.id, {

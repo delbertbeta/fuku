@@ -15,7 +15,7 @@ A personal outfit management platform for tracking clothing items and creating o
 - **Framework**: Next.js 16 (App Router)
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS 4
-- **Database**: SQLite (better-sqlite3)
+- **Database**: SQLite (better-sqlite3) or MariaDB
 - **Authentication**: Custom session-based auth with bcrypt
 - **Storage**: AWS S3 (optional) or local filesystem
 
@@ -43,9 +43,53 @@ cp .env.example .env
 Required environment variables:
 
 - `SESSION_SECRET`: Secret key for session management
-- `DATABASE_PATH`: SQLite database file path (default: `./data/outfit-platform.db`)
 - `IMAGE_STORAGE_TYPE`: `local` or `s3`
 - `ALLOW_REGISTRATION`: Enable/disable new user registration
+
+### Database Configuration
+
+The application supports both SQLite and MariaDB databases.
+
+#### SQLite (Default)
+
+```bash
+DATABASE_TYPE=sqlite
+DATABASE_PATH=./data/outfit-platform.db
+```
+
+#### MariaDB
+
+```bash
+DATABASE_TYPE=mariadb
+MARIADB_URL=mysql://username:password@host:port/database
+```
+
+Example MariaDB URL:
+
+```
+MARIADB_URL=mysql://outfit_user:secure_password@localhost:3306/outfit_platform
+```
+
+**Setting up MariaDB with Docker:**
+
+```bash
+docker run -d \
+  --name mariadb \
+  -e MYSQL_ROOT_PASSWORD=root_password \
+  -e MYSQL_DATABASE=outfit_platform \
+  -e MYSQL_USER=outfit_user \
+  -e MYSQL_PASSWORD=secure_password \
+  -p 3306:3306 \
+  mariadb:latest
+```
+
+**Setting up MariaDB locally:**
+
+1. Install MariaDB
+2. Create a database: `CREATE DATABASE outfit_platform;`
+3. Create a user: `CREATE USER 'outfit_user'@'localhost' IDENTIFIED BY 'secure_password';`
+4. Grant privileges: `GRANT ALL PRIVILEGES ON outfit_platform.* TO 'outfit_user'@'localhost';`
+5. Flush privileges: `FLUSH PRIVILEGES;`
 
 Optional S3 configuration (if using S3 storage):
 

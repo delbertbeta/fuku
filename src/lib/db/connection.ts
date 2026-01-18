@@ -1,35 +1,61 @@
-import Database from "better-sqlite3";
+import { IDatabaseAdapter } from "./adapter/base";
+import { SQLiteAdapter } from "./adapter/sqlite";
+import { MariaDBAdapter } from "./adapter/mariadb";
 import path from "path";
-import { initializeSchema } from "./schema";
 
-const dbPath = process.env.DATABASE_PATH || "./data/outfit-platform.db";
-
-let db: Database.Database | null = null;
+let adapter: IDatabaseAdapter | null = null;
 let initialized = false;
 
-export function getDb(): Database.Database {
-  if (!db) {
-    const dbDir = path.dirname(dbPath);
-    const fs = require("fs");
-    if (!fs.existsSync(dbDir)) {
-      fs.mkdirSync(dbDir, { recursive: true });
+export function getDb(): IDatabaseAdapter {
+  if (!adapter) {
+    const dbType = process.env.DATABASE_TYPE || "sqlite";
+
+    if (dbType === "mariadb") {
+      adapter = createMariaDBAdapter();
+    } else {
+      adapter = createSQLiteAdapter();
     }
 
-    db = new Database(dbPath);
-    db.pragma("journal_mode = WAL");
-    db.pragma("foreign_keys = ON");
-
     if (!initialized) {
-      initializeSchema();
+      initializeSchema(adapter);
       initialized = true;
     }
   }
-  return db;
+  return adapter;
+}
+
+function createSQLiteAdapter(): IDatabaseAdapter {
+  const dbPath = process.env.DATABASE_PATH || "./data/outfit-platform.db";
+  const dbDir = path.dirname(dbPath);
+  const fs = require("fs");
+
+  if (!fs.existsSync(dbDir)) {
+    fs.mkdirSync(dbDir, { recursive: true });
+  }
+
+  return new SQLiteAdapter(dbPath);
+}
+
+function createMariaDBAdapter(): IDatabaseAdapter {
+  const url = process.env.MARIADB_URL;
+
+  if (!url) {
+    throw new Error(
+      "MARIADB_URL environment variable is required when DATABASE_TYPE=mariadb"
+    );
+  }
+
+  return new MariaDBAdapter(url);
+}
+
+function initializeSchema(db: IDatabaseAdapter): void {
+  const { initializeSchema: initSchema } = require("./schema");
+  initSchema(db);
 }
 
 export function closeDb(): void {
-  if (db) {
-    db.close();
-    db = null;
+  if (adapter) {
+    adapter.close();
+    adapter = null;
   }
 }

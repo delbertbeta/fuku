@@ -7,40 +7,59 @@ export interface Session {
   created_at: string;
 }
 
-export function createSession(userId: number, expiresInHours = 24): Session {
+export async function createSession(
+  userId: number,
+  expiresInHours = 24
+): Promise<Session> {
   const db = getDb();
   const sessionId = generateSessionId();
   const expiresAt = new Date(Date.now() + expiresInHours * 60 * 60 * 1000);
+  const dbType = process.env.DATABASE_TYPE || "sqlite";
+
+  const dateFormat = (date: Date) => {
+    if (dbType === "mariadb") {
+      return date.toISOString().slice(0, 19).replace("T", " ");
+    }
+    return date.toISOString();
+  };
 
   const stmt = db.prepare(
-    "INSERT INTO sessions (id, user_id, expires_at) VALUES (?, ?, ?) RETURNING *"
+    "INSERT INTO sessions (id, user_id, expires_at) VALUES (?, ?, ?)"
   );
-  const session = stmt.get(
-    sessionId,
-    userId,
-    expiresAt.toISOString()
-  ) as Session;
-  return session;
+  await stmt.run([sessionId, userId, dateFormat(expiresAt)]);
+
+  return {
+    id: sessionId,
+    user_id: userId,
+    expires_at: dateFormat(expiresAt),
+    created_at: dateFormat(new Date()),
+  };
 }
 
-export function getSession(sessionId: string): Session | undefined {
+export async function getSession(
+  sessionId: string
+): Promise<Session | undefined> {
   const db = getDb();
+  const dbType = process.env.DATABASE_TYPE || "sqlite";
+
+  const nowClause = dbType === "mariadb" ? "NOW()" : "datetime('now')";
+
   const stmt = db.prepare(
-    "SELECT * FROM sessions WHERE id = ? AND expires_at > datetime('now')"
+    `SELECT * FROM sessions WHERE id = ? AND expires_at > ${nowClause}`
   );
-  return stmt.get(sessionId) as Session | undefined;
+  return (await stmt.get([sessionId])) as Session | undefined;
 }
 
-export function deleteSession(sessionId: string): void {
+export async function deleteSession(sessionId: string): Promise<void> {
   const db = getDb();
   const stmt = db.prepare("DELETE FROM sessions WHERE id = ?");
-  stmt.run(sessionId);
+  await stmt.run([sessionId]);
 }
 
-export function deleteAllUserSessions(userId: number): void {
+export async function deleteAllUserSessions(userId: number): Promise<void> {
   const db = getDb();
   const stmt = db.prepare("DELETE FROM sessions WHERE user_id = ?");
-  stmt.run(userId);
+  await stmt.run([userId]);
 }
 
 function generateSessionId(): string {

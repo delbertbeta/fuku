@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
-import { getDb, initializeSchema } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { z } from "zod";
-
-initializeSchema();
 
 const categorySchema = z.object({
   name: z.string().min(1).max(50),
@@ -16,7 +14,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const session = getSession(sessionCookie.value);
+    const session = await getSession(sessionCookie.value);
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -25,7 +23,7 @@ export async function GET(request: NextRequest) {
     const stmt = db.prepare(
       "SELECT id, name, is_system, created_at, updated_at FROM clothing_categories WHERE user_id = ? ORDER BY is_system DESC, name ASC"
     );
-    const categories = stmt.all(session.user_id);
+    const categories = await stmt.all([session.user_id]);
 
     return NextResponse.json({ categories });
   } catch (error) {
@@ -44,7 +42,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const session = getSession(sessionCookie.value);
+    const session = await getSession(sessionCookie.value);
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -68,7 +66,7 @@ export async function POST(request: NextRequest) {
 
     let category;
     try {
-      category = stmt.get(session.user_id, name);
+      category = await stmt.get([session.user_id, name]);
     } catch (error) {
       return NextResponse.json(
         { error: "Category already exists" },

@@ -1,15 +1,13 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { z } from 'zod';
-import { getUserByEmail } from '@/lib/auth';
-import { verifyPassword, createSession } from '@/lib/auth';
-import { initializeDatabase } from '@/lib/db';
-import { cookies } from 'next/headers';
+import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
+import { getUserByEmail } from "@/lib/auth";
+import { verifyPassword, createSession } from "@/lib/auth";
+import { cookies } from "next/headers";
 
-initializeDatabase();
 
 const loginSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(1, 'Password is required'),
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(1, "Password is required"),
 });
 
 export async function POST(request: NextRequest) {
@@ -26,25 +24,31 @@ export async function POST(request: NextRequest) {
 
     const { email, password } = result.data;
 
-    const user = getUserByEmail(email);
+    const user = await getUserByEmail(email);
     if (!user) {
-      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
+      return NextResponse.json(
+        { error: "Invalid credentials" },
+        { status: 401 }
+      );
     }
 
     const isValidPassword = await verifyPassword(password, user.password_hash);
     if (!isValidPassword) {
-      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
+      return NextResponse.json(
+        { error: "Invalid credentials" },
+        { status: 401 }
+      );
     }
 
-    const session = createSession(user.id);
+    const session = await createSession(user.id);
 
     const cookieStore = await cookies();
-    cookieStore.set('session', session.id, {
+    cookieStore.set("session", session.id, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
       maxAge: 24 * 60 * 60,
-      path: '/',
+      path: "/",
     });
 
     return NextResponse.json({
@@ -54,9 +58,9 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Login error:', error);
+    console.error("Login error:", error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }

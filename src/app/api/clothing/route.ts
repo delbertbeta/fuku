@@ -2,11 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { uploadImage } from "@/lib/storage";
-import { initializeDatabase } from "@/lib/db";
 import { z } from "zod";
 import sharp from "sharp";
 
-initializeDatabase();
 
 const clothingSchema = z.object({
   name: z.string().min(1),
@@ -23,7 +21,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const session = getSession(sessionCookie.value);
+    const session = await getSession(sessionCookie.value);
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -48,7 +46,7 @@ export async function GET(request: NextRequest) {
     query += " ORDER BY ci.created_at DESC";
 
     const stmt = db.prepare(query);
-    const items = stmt.all(...params);
+    const items = await stmt.all(params);
 
     return NextResponse.json({ items });
   } catch (error) {
@@ -67,7 +65,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const session = getSession(sessionCookie.value);
+    const session = await getSession(sessionCookie.value);
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -93,7 +91,10 @@ export async function POST(request: NextRequest) {
     const categoryStmt = db.prepare(
       "SELECT id FROM clothing_categories WHERE id = ? AND user_id = ?"
     );
-    const categoryExists = categoryStmt.get(categoryId, session.user_id);
+    const categoryExists = await categoryStmt.get([
+      categoryId,
+      session.user_id,
+    ]);
     if (!categoryExists) {
       return NextResponse.json({ error: "Invalid category" }, { status: 400 });
     }
@@ -116,20 +117,20 @@ export async function POST(request: NextRequest) {
       "INSERT INTO clothing_items (user_id, name, category, description, image_path, price, purchase_date) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING *"
     );
 
-    const item = stmt.get(
+    const item = await stmt.get([
       session.user_id,
       name,
       categoryId,
       description || null,
       imagePath,
       price ? parseFloat(price) : null,
-      purchaseDate || null
-    );
+      purchaseDate || null,
+    ]);
 
     const resultItem = item as any;
-    const categoryInfo = db
+    const categoryInfo = (await db
       .prepare("SELECT name FROM clothing_categories WHERE id = ?")
-      .get(resultItem.category) as any;
+      .get([resultItem.category])) as any;
 
     return NextResponse.json(
       { item: { ...resultItem, category_name: categoryInfo?.name } },
