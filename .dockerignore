@@ -60,5 +60,3 @@ tests
 prettier.config.js
 .eslintrc*
 eslint.config.mjs
-postcss.config.js
-tailwind.config.js
