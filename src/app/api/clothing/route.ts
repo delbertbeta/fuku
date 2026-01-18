@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
-import { getDb } from "@/lib/db";
+import { getDb, helpers } from "@/lib/db";
 import { uploadImage } from "@/lib/storage";
 import { z } from "zod";
 import sharp from "sharp";
@@ -112,11 +112,16 @@ export async function POST(request: NextRequest) {
     const filename = image.name;
     const imagePath = await uploadImage(processedBuffer, filename, image.type);
 
-    const stmt = db.prepare(
-      "INSERT INTO clothing_items (user_id, name, category, description, image_path, price, purchase_date) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING *"
-    );
-
-    const item = await stmt.get([
+    const columns = [
+      "user_id",
+      "name",
+      "category",
+      "description",
+      "image_path",
+      "price",
+      "purchase_date",
+    ];
+    const values = [
       session.user_id,
       name,
       categoryId,
@@ -124,7 +129,14 @@ export async function POST(request: NextRequest) {
       imagePath,
       price ? parseFloat(price) : null,
       purchaseDate || null,
-    ]);
+    ];
+
+    const item = await helpers.insertAndGet(
+      db,
+      "clothing_items",
+      columns,
+      values
+    );
 
     const resultItem = item as any;
     const categoryInfo = (await db

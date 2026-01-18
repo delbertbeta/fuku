@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
-import { getDb } from "@/lib/db";
+import { getDb, helpers } from "@/lib/db";
 import { z } from "zod";
 
 const outfitSchema = z.object({
@@ -102,13 +102,17 @@ export async function PUT(
     });
 
     if (updates.length > 0) {
-      updates.push("updated_at = datetime('now')");
+      updates.push(`updated_at = ${helpers.getNowFunction()}`);
       values.push(idNum, session.user_id);
 
-      const stmt = db.prepare(
-        `UPDATE outfits SET ${updates.join(", ")} WHERE id = ? AND user_id = ? RETURNING *`
+      const outfit = await helpers.updateAndGet(
+        db,
+        "outfits",
+        updates,
+        values,
+        ["id = ?", "user_id = ?"],
+        [idNum, session.user_id]
       );
-      const outfit = await stmt.get(values);
 
       if (!outfit) {
         return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -189,10 +193,12 @@ export async function DELETE(
     }
 
     const db = getDb();
-    const stmt = db.prepare(
-      "DELETE FROM outfits WHERE id = ? AND user_id = ? RETURNING *"
+    const outfit = await helpers.deleteAndGet(
+      db,
+      "outfits",
+      ["id = ?", "user_id = ?"],
+      [idNum, session.user_id]
     );
-    const outfit = await stmt.get([idNum, session.user_id]);
 
     if (!outfit) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });

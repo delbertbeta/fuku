@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
-import { getDb } from "@/lib/db";
+import { getDb, helpers } from "@/lib/db";
 import { z } from "zod";
 
 const outfitSchema = z.object({
@@ -107,14 +107,15 @@ export async function POST(request: NextRequest) {
     }
 
     const db = getDb();
-    const insertStmt = db.prepare(
-      "INSERT INTO outfits (user_id, name, description) VALUES (?, ?, ?) RETURNING *"
-    );
-    const outfit = (await insertStmt.get([
-      session.user_id,
-      name,
-      description || null,
-    ])) as any;
+    const columns = ["user_id", "name", "description"];
+    const values = [session.user_id, name, description || null];
+
+    const outfit = (await helpers.insertAndGet(
+      db,
+      "outfits",
+      columns,
+      values
+    )) as any;
 
     await db.transaction(async () => {
       const insertItemStmt = db.prepare(

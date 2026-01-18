@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
-import { getDb } from "@/lib/db";
+import { getDb, helpers } from "@/lib/db";
 import { z } from "zod";
 
 const categorySchema = z.object({
@@ -60,13 +60,17 @@ export async function POST(request: NextRequest) {
     const { name } = validation.data;
 
     const db = getDb();
-    const stmt = db.prepare(
-      "INSERT INTO clothing_categories (user_id, name, is_system) VALUES (?, ?, 0) RETURNING *"
-    );
+    const columns = ["user_id", "name", "is_system"];
+    const values = [session.user_id, name, 0];
 
     let category;
     try {
-      category = await stmt.get([session.user_id, name]);
+      category = await helpers.insertAndGet(
+        db,
+        "clothing_categories",
+        columns,
+        values
+      );
     } catch (error) {
       return NextResponse.json(
         { error: "Category already exists" },

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
-import { getDb } from "@/lib/db";
+import { getDb, helpers } from "@/lib/db";
 import { uploadImage } from "@/lib/storage";
 import { z } from "zod";
 import sharp from "sharp";
@@ -102,13 +102,17 @@ export async function PUT(
       );
     }
 
-    updates.push("updated_at = datetime('now')");
+    updates.push(`updated_at = ${helpers.getNowFunction()}`);
     values.push(idNum, session.user_id);
 
-    const stmt = db.prepare(
-      `UPDATE clothing_items SET ${updates.join(", ")} WHERE id = ? AND user_id = ? RETURNING *`
+    const item = await helpers.updateAndGet(
+      db,
+      "clothing_items",
+      updates,
+      values,
+      ["id = ?", "user_id = ?"],
+      [idNum, session.user_id]
     );
-    const item = await stmt.get(values);
 
     if (!item) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -146,10 +150,12 @@ export async function DELETE(
     }
 
     const db = getDb();
-    const stmt = db.prepare(
-      "DELETE FROM clothing_items WHERE id = ? AND user_id = ? RETURNING *"
+    const item = await helpers.deleteAndGet(
+      db,
+      "clothing_items",
+      ["id = ?", "user_id = ?"],
+      [idNum, session.user_id]
     );
-    const item = await stmt.get([idNum, session.user_id]);
 
     if (!item) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });

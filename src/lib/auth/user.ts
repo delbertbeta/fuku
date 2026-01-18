@@ -1,4 +1,4 @@
-import { getDb } from "../db";
+import { getDb, helpers } from "../db";
 
 export interface User {
   id: number;
@@ -13,10 +13,15 @@ export async function createUser(
   passwordHash: string
 ): Promise<User> {
   const db = getDb();
-  const stmt = db.prepare(
-    "INSERT INTO users (email, password_hash) VALUES (?, ?) RETURNING *"
-  );
-  const user = (await stmt.get([email, passwordHash])) as User;
+  const columns = ["email", "password_hash"];
+  const values = [email, passwordHash];
+
+  const user = (await helpers.insertAndGet(
+    db,
+    "users",
+    columns,
+    values
+  )) as User;
 
   await createDefaultCategoriesForUser(user.id);
 
