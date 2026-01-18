@@ -6,19 +6,35 @@ import Link from "next/link";
 
 export default function OutfitNewPage() {
   const [clothingItems, setClothingItems] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
   const [selectedClothing, setSelectedClothing] = useState<number[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [outfitName, setOutfitName] = useState<string>("");
   const router = useRouter();
 
+  const loadCategories = async () => {
+    try {
+      const response = await fetch("/api/categories");
+      const data = await response.json();
+      setCategories(data.categories || []);
+    } catch (error) {
+      console.error("Failed to load categories:", error);
+    }
+  };
+
   const loadData = async () => {
-    const response = await fetch("/api/clothing");
+    const url = selectedCategory
+      ? `/api/clothing?category=${selectedCategory}`
+      : "/api/clothing";
+    const response = await fetch(url);
     const data = await response.json();
     setClothingItems(data.items || []);
   };
 
   useEffect(() => {
+    loadCategories();
     loadData();
-  }, []);
+  }, [selectedCategory]);
 
   const handleCreateOutfit = async () => {
     if (!outfitName.trim()) {
@@ -61,6 +77,35 @@ export default function OutfitNewPage() {
             maxLength={100}
           />
         </div>
+
+        <div className="mb-4 flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => setSelectedCategory(null)}
+            className={`flex items-center px-3 py-1.5 rounded-md text-sm ${
+              !selectedCategory
+                ? "bg-blue-500 text-white"
+                : "bg-gray-200 hover:bg-gray-300 text-gray-700"
+            }`}
+          >
+            全部
+          </button>
+          {categories.map((cat) => (
+            <button
+              type="button"
+              key={cat.id}
+              onClick={() => setSelectedCategory(cat.id)}
+              className={`flex items-center px-3 py-1.5 rounded-md text-sm ${
+                selectedCategory === cat.id
+                  ? "bg-blue-500 text-white"
+                  : "bg-gray-200 hover:bg-gray-300 text-gray-700"
+              }`}
+            >
+              {cat.name}
+            </button>
+          ))}
+        </div>
+
         <div className="space-y-2 mb-4">
           {clothingItems.map((item) => (
             <label

@@ -36,15 +36,35 @@ export default function OutfitDetailPage() {
   const [description, setDescription] = useState("");
   const [selectedClothing, setSelectedClothing] = useState<number[]>([]);
   const [clothingItems, setClothingItems] = useState<ClothingItem[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
 
   useEffect(() => {
     loadOutfit();
+    loadCategories();
     loadClothingItems();
   }, [id]);
 
+  useEffect(() => {
+    loadClothingItems();
+  }, [selectedCategory]);
+
+  const loadCategories = async () => {
+    try {
+      const response = await fetch("/api/categories");
+      const data = await response.json();
+      setCategories(data.categories || []);
+    } catch (err) {
+      console.error("Failed to load categories:", err);
+    }
+  };
+
   const loadClothingItems = async () => {
     try {
-      const response = await fetch("/api/clothing");
+      const url = selectedCategory
+        ? `/api/clothing?category=${selectedCategory}`
+        : "/api/clothing";
+      const response = await fetch(url);
       const data = await response.json();
       setClothingItems(data.items || []);
     } catch (err) {
@@ -236,6 +256,35 @@ export default function OutfitDetailPage() {
             <label className="block mb-2 text-sm">
               选择服装 ({selectedClothing.length}件)
             </label>
+
+            <div className="mb-3 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => setSelectedCategory(null)}
+                className={`flex items-center px-3 py-1.5 rounded-md text-sm ${
+                  !selectedCategory
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-200 hover:bg-gray-300 text-gray-700"
+                }`}
+              >
+                全部
+              </button>
+              {categories.map((cat) => (
+                <button
+                  type="button"
+                  key={cat.id}
+                  onClick={() => setSelectedCategory(cat.id)}
+                  className={`flex items-center px-3 py-1.5 rounded-md text-sm ${
+                    selectedCategory === cat.id
+                      ? "bg-blue-500 text-white"
+                      : "bg-gray-200 hover:bg-gray-300 text-gray-700"
+                  }`}
+                >
+                  {cat.name}
+                </button>
+              ))}
+            </div>
+
             <div className="space-y-2 max-h-64 overflow-y-auto border rounded-md p-2">
               {clothingItems.length === 0 ? (
                 <div className="text-center py-4 text-gray-500">
