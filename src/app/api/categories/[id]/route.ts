@@ -52,7 +52,7 @@ export async function DELETE(
     }
 
     const uncategorizedStmt = db.prepare(
-      "SELECT id FROM clothing_categories WHERE user_id = ? AND name = 'uncategorized'"
+      "SELECT id, name FROM clothing_categories WHERE user_id = ? AND (name = 'uncategorized' OR name = '未分类')"
     );
     const uncategorized = (await uncategorizedStmt.get([
       session.user_id,
@@ -65,23 +65,22 @@ export async function DELETE(
       );
     }
 
-    const categoryStmt2 = db.prepare(
-      "SELECT name FROM clothing_categories WHERE id = ?"
-    );
-    const categoryInfo = (await categoryStmt2.get([categoryId])) as any;
-
     const itemCountStmt = db.prepare(
       "SELECT COUNT(*) as count FROM clothing_items WHERE category = ? AND user_id = ?"
     );
     const itemCount = (await itemCountStmt.get([
-      categoryInfo?.name,
+      categoryId,
       session.user_id,
     ])) as any;
 
     const updateStmt = db.prepare(
-      "UPDATE clothing_items SET category = 'uncategorized' WHERE category = (SELECT name FROM clothing_categories WHERE id = ?) AND user_id = ?"
+      "UPDATE clothing_items SET category = ? WHERE category = ? AND user_id = ?"
     );
-    const updateResult = await updateStmt.run([categoryId, session.user_id]);
+    const updateResult = await updateStmt.run([
+      uncategorized.id,
+      categoryId,
+      session.user_id,
+    ]);
 
     const deleteStmt = db.prepare(
       "DELETE FROM clothing_categories WHERE id = ? AND user_id = ?"

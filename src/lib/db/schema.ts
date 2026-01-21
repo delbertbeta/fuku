@@ -86,6 +86,16 @@ function getSchema(dbType: string): string {
       clothing_id INT NOT NULL ${references("clothing_items", "id", "CASCADE")},
       PRIMARY KEY (outfit_id, clothing_id)
     );
+
+    CREATE TABLE IF NOT EXISTS outfit_calendar (
+      user_id INT NOT NULL ${references("users", "id", "CASCADE")},
+      outfit_id INT NOT NULL ${references("outfits", "id", "CASCADE")},
+      date DATE NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (user_id, date, outfit_id),
+      INDEX idx_outfit_calendar_user_date (user_id, date),
+      INDEX idx_outfit_calendar_outfit_id (outfit_id)
+    );
   `;
 }
 

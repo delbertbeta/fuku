@@ -9,6 +9,7 @@ export default function MobileNavigation() {
   const tabs = [
     { name: "服装", path: "/clothing" },
     { name: "穿搭", path: "/outfits" },
+    { name: "日历", path: "/calendar" },
     { name: "设置", path: "/settings" },
   ];
 
