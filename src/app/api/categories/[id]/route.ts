@@ -66,30 +66,32 @@ export async function DELETE(
     }
 
     const itemCountStmt = db.prepare(
-      "SELECT COUNT(*) as count FROM clothing_items WHERE category = ? AND user_id = ?"
+      "SELECT COUNT(DISTINCT clothing_item_id) as count FROM clothing_item_categories WHERE category_id = ?"
     );
-    const itemCount = (await itemCountStmt.get([
-      categoryId,
-      session.user_id,
-    ])) as any;
+    const itemCount = (await itemCountStmt.get([categoryId])) as any;
 
-    const updateStmt = db.prepare(
-      "UPDATE clothing_items SET category = ? WHERE category = ? AND user_id = ?"
-    );
-    const updateResult = await updateStmt.run([
-      uncategorized.id,
-      categoryId,
-      session.user_id,
-    ]);
+    const dbType = process.env.DATABASE_TYPE || "sqlite";
+    const insertSql =
+      dbType === "mariadb"
+        ? "INSERT IGNORE INTO clothing_item_categories (clothing_item_id, category_id) SELECT clothing_item_id, ? FROM clothing_item_categories WHERE category_id = ?"
+        : "INSERT OR IGNORE INTO clothing_item_categories (clothing_item_id, category_id) SELECT clothing_item_id, ? FROM clothing_item_categories WHERE category_id = ?";
+    const updateStmt = db.prepare(insertSql);
 
-    const deleteStmt = db.prepare(
-      "DELETE FROM clothing_categories WHERE id = ? AND user_id = ?"
-    );
-    await deleteStmt.run([categoryId, session.user_id]);
+    await db.transaction(async () => {
+      await updateStmt.run([uncategorized.id, categoryId]);
+      const deleteJoinStmt = db.prepare(
+        "DELETE FROM clothing_item_categories WHERE category_id = ?"
+      );
+      await deleteJoinStmt.run([categoryId]);
+      const deleteStmt = db.prepare(
+        "DELETE FROM clothing_categories WHERE id = ? AND user_id = ?"
+      );
+      await deleteStmt.run([categoryId, session.user_id]);
+    });
 
     return NextResponse.json({
       message: "Category deleted successfully",
-      affectedItems: updateResult.changes,
+      affectedItems: itemCount.count,
     });
   } catch (error) {
     console.error("Delete category error:", error);

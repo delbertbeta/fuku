@@ -4,37 +4,53 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
+type Category = {
+  id: number;
+  name: string;
+};
+
 export default function ClothingNewPage() {
   const [name, setName] = useState("");
-  const [category, setCategory] = useState("");
+  const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
   const [purchaseDate, setPurchaseDate] = useState("");
   const [image, setImage] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
-  const [categories, setCategories] = useState<any[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const router = useRouter();
 
   useEffect(() => {
     fetch("/api/categories")
       .then((res) => res.json())
       .then((data) => {
-        setCategories(data.categories || []);
-        if (data.categories && data.categories.length > 0) {
-          setCategory(String(data.categories[0].id));
+        const loaded = data.categories || [];
+        setCategories(loaded);
+        if (loaded.length > 0) {
+          setSelectedCategories([loaded[0].id]);
         }
       });
   }, []);
 
+  const toggleCategory = (categoryId: number) => {
+    setSelectedCategories((prev) =>
+      prev.includes(categoryId)
+        ? prev.filter((id) => id !== categoryId)
+        : [...prev, categoryId]
+    );
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!image) return;
+    if (!image || selectedCategories.length === 0) return;
 
     setLoading(true);
     const formData = new FormData();
     formData.append("image", image);
     formData.append("name", name);
-    formData.append("category", category);
+    selectedCategories.forEach((categoryId) => {
+      formData.append("categories", String(categoryId));
+    });
     if (description) formData.append("description", description);
     if (price) formData.append("price", price);
     if (purchaseDate) formData.append("purchase_date", purchaseDate);
@@ -78,18 +94,25 @@ export default function ClothingNewPage() {
 
           <div>
             <label className="block mb-2 text-sm">分类 *</label>
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="w-full p-3 border rounded-md"
-              required
-            >
+            <div className="flex flex-wrap gap-2">
               {categories.map((cat) => (
-                <option key={cat.id} value={cat.id}>
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => toggleCategory(cat.id)}
+                  className={`px-3 py-1.5 rounded-md text-sm border transition-colors ${
+                    selectedCategories.includes(cat.id)
+                      ? "bg-blue-500 text-white border-blue-500"
+                      : "bg-white text-gray-700 border-gray-300 hover:border-blue-400"
+                  }`}
+                >
                   {cat.name}
-                </option>
+                </button>
               ))}
-            </select>
+            </div>
+            {selectedCategories.length === 0 && (
+              <p className="text-xs text-red-500 mt-2">至少选择一个分类</p>
+            )}
           </div>
 
           <div>
@@ -136,7 +159,7 @@ export default function ClothingNewPage() {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || selectedCategories.length === 0}
             className="w-full bg-blue-500 text-white py-3 rounded-md hover:bg-blue-600 disabled:bg-gray-400"
           >
             {loading ? "保存中..." : "保存"}

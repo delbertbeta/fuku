@@ -16,6 +16,7 @@ type ClothingItem = {
   id: number;
   name: string;
   category: string;
+  category_names?: string[];
   description: string | null;
   price: number | null;
   image_path: string;
@@ -167,6 +168,14 @@ export default function OutfitDetailPage() {
     }
   };
 
+  const renderCategories = (item: ClothingItem) => {
+    if (item.category_names && item.category_names.length > 0) {
+      return item.category_names.join(" · ");
+    }
+
+    return item.category || "";
+  };
+
   if (loading) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-6">
@@ -216,6 +225,9 @@ export default function OutfitDetailPage() {
                       className="w-full aspect-square object-cover rounded mb-1"
                     />
                     <p className="text-sm truncate">{item.name}</p>
+                    <p className="text-xs text-gray-500 truncate">
+                      {renderCategories(item)}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -307,7 +319,12 @@ export default function OutfitDetailPage() {
                       alt={item.name}
                       className="w-12 h-12 object-cover rounded"
                     />
-                    <span className="flex-1 truncate">{item.name}</span>
+                    <div className="flex-1 min-w-0">
+                      <span className="block truncate">{item.name}</span>
+                      <span className="text-xs text-gray-500 truncate block">
+                        {renderCategories(item)}
+                      </span>
+                    </div>
                   </label>
                 ))
               )}

@@ -8,11 +8,18 @@ import { useParams } from "next/navigation";
 type ClothingItem = {
   id: number;
   name: string;
-  category: string;
+  category: number;
+  category_ids?: number[];
+  category_names?: string[];
   description: string | null;
   price: number | null;
   purchase_date: string | null;
   image_path: string;
+};
+
+type Category = {
+  id: number;
+  name: string;
 };
 
 export default function ClothingDetailPage() {
@@ -27,12 +34,12 @@ export default function ClothingDetailPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const [name, setName] = useState("");
-  const [category, setCategory] = useState("");
+  const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
   const [purchaseDate, setPurchaseDate] = useState("");
 
-  const [categories, setCategories] = useState<any[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
 
   useEffect(() => {
     loadCategories();
@@ -65,7 +72,13 @@ export default function ClothingDetailPage() {
       const clothingItem = data.item as ClothingItem;
       setItem(clothingItem);
       setName(clothingItem.name);
-      setCategory(clothingItem.category);
+      const initialCategories =
+        clothingItem.category_ids && clothingItem.category_ids.length > 0
+          ? clothingItem.category_ids
+          : clothingItem.category
+            ? [clothingItem.category]
+            : [];
+      setSelectedCategories(initialCategories);
       setDescription(clothingItem.description || "");
       setPrice(clothingItem.price ? String(clothingItem.price) : "");
       setPurchaseDate(clothingItem.purchase_date || "");
@@ -76,9 +89,17 @@ export default function ClothingDetailPage() {
     }
   };
 
+  const toggleCategory = (categoryId: number) => {
+    setSelectedCategories((prev) =>
+      prev.includes(categoryId)
+        ? prev.filter((id) => id !== categoryId)
+        : [...prev, categoryId]
+    );
+  };
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !category) {
+    if (!name || selectedCategories.length === 0) {
       setError("名称和分类为必填项");
       return;
     }
@@ -89,7 +110,7 @@ export default function ClothingDetailPage() {
     try {
       const body: any = {
         name,
-        category: parseInt(category),
+        categories: selectedCategories,
         description: description || null,
         price: price ? parseFloat(price) : null,
         purchase_date: purchaseDate || null,
@@ -203,18 +224,25 @@ export default function ClothingDetailPage() {
 
           <div>
             <label className="block mb-2 text-sm">分类 *</label>
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="w-full p-3 border rounded-md"
-              required
-            >
+            <div className="flex flex-wrap gap-2">
               {categories.map((cat) => (
-                <option key={cat.id} value={cat.id}>
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => toggleCategory(cat.id)}
+                  className={`px-3 py-1.5 rounded-md text-sm border transition-colors ${
+                    selectedCategories.includes(cat.id)
+                      ? "bg-blue-500 text-white border-blue-500"
+                      : "bg-white text-gray-700 border-gray-300 hover:border-blue-400"
+                  }`}
+                >
                   {cat.name}
-                </option>
+                </button>
               ))}
-            </select>
+            </div>
+            {selectedCategories.length === 0 && (
+              <p className="text-xs text-red-500 mt-2">至少选择一个分类</p>
+            )}
           </div>
 
           <div>
@@ -251,7 +279,7 @@ export default function ClothingDetailPage() {
           <div className="flex gap-2">
             <button
               type="submit"
-              disabled={saving}
+              disabled={saving || selectedCategories.length === 0}
               className="flex-1 bg-blue-500 text-white py-3 rounded-md hover:bg-blue-600 disabled:bg-gray-400"
             >
               {saving ? "保存中..." : "保存"}

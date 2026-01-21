@@ -3,9 +3,7 @@
 ## Purpose
 
 TBD - created by archiving change localize-ui-to-chinese. Update Purpose after archive.
-
 ## Requirements
-
 ### Requirement: Root layout language setting
 
 The root layout SHALL use Chinese language attribute with English document title.
@@ -57,7 +55,7 @@ Given the user is logged in
 When the main page renders
 Then the header title should be "Fuku"
 And the logout button should display "退出登录"
-And the navigation tabs should display "服装" and "穿搭"
+And the navigation tabs should display "服装", "穿搭", and "日历"
 And the loading state should display "加载中..."
 
 #### Scenario: User sees clothing list in Chinese
@@ -108,3 +106,4 @@ Then all Chinese characters should display correctly
 And there should be no mojibake (garbled text)
 And the font should support Chinese characters
 And text should be legible and properly sized
+

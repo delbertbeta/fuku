@@ -8,6 +8,7 @@ export function initializeSchema(db: IDatabaseAdapter): void {
   db.exec(schema).then(() => {
     migrateCategories(db);
     migrateCategoryToId(db, dbType);
+    migrateClothingCategoryJoin(db, dbType);
   });
 }
 
@@ -71,6 +72,14 @@ function getSchema(dbType: string): string {
       INDEX idx_clothing_items_category (category)
     );
 
+    CREATE TABLE IF NOT EXISTS clothing_item_categories (
+      clothing_item_id INT NOT NULL ${references("clothing_items", "id", "CASCADE")},
+      category_id INT NOT NULL ${references("clothing_categories", "id", "CASCADE")},
+      PRIMARY KEY (clothing_item_id, category_id),
+      INDEX idx_clothing_item_categories_category_id (category_id),
+      INDEX idx_clothing_item_categories_item_id (clothing_item_id)
+    );
+
     CREATE TABLE IF NOT EXISTS outfits (
       id ${autoIncrement} ${primaryKey},
       user_id INT NOT NULL ${references("users", "id", "CASCADE")},
@@ -129,10 +138,17 @@ async function migrateCategories(db: IDatabaseAdapter): Promise<void> {
 
   for (const user of users) {
     for (const cat of defaultCategories) {
-      await db.query(
-        `INSERT IGNORE INTO clothing_categories (user_id, name, is_system) VALUES (?, ?, 1)`,
-        [user.id, cat.name]
-      );
+      if (dbType === "mariadb") {
+        await db.query(
+          "INSERT IGNORE INTO clothing_categories (user_id, name, is_system) VALUES (?, ?, 1)",
+          [user.id, cat.name]
+        );
+      } else {
+        await db.query(
+          "INSERT OR IGNORE INTO clothing_categories (user_id, name, is_system) VALUES (?, ?, 1)",
+          [user.id, cat.name]
+        );
+      }
     }
   }
 }
@@ -230,5 +246,42 @@ async function migrateCategoryToId(
     }
   } catch (error) {
     console.error("Error migrating category to ID:", error);
+  }
+}
+
+async function migrateClothingCategoryJoin(
+  db: IDatabaseAdapter,
+  dbType: string
+): Promise<void> {
+  const checkTableSql =
+    dbType === "mariadb"
+      ? `SELECT table_name FROM information_schema.tables WHERE table_name = 'clothing_item_categories'`
+      : `SELECT name FROM sqlite_master WHERE type='table' AND name='clothing_item_categories'`;
+
+  const tableExists = await db.query(checkTableSql);
+  if (tableExists.length === 0) {
+    return;
+  }
+
+  try {
+    const dbType = process.env.DATABASE_TYPE || "sqlite";
+    const insertSql =
+      dbType === "mariadb"
+        ? `INSERT IGNORE INTO clothing_item_categories (clothing_item_id, category_id)
+           SELECT ci.id, ci.category
+           FROM clothing_items ci
+           LEFT JOIN clothing_item_categories cic
+             ON cic.clothing_item_id = ci.id AND cic.category_id = ci.category
+           WHERE ci.category IS NOT NULL AND cic.clothing_item_id IS NULL`
+        : `INSERT OR IGNORE INTO clothing_item_categories (clothing_item_id, category_id)
+           SELECT ci.id, ci.category
+           FROM clothing_items ci
+           LEFT JOIN clothing_item_categories cic
+             ON cic.clothing_item_id = ci.id AND cic.category_id = ci.category
+           WHERE ci.category IS NOT NULL AND cic.clothing_item_id IS NULL`;
+
+    await db.exec(insertSql);
+  } catch (error) {
+    console.error("Error migrating clothing category join:", error);
   }
 }

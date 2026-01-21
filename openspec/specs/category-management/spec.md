@@ -3,9 +3,7 @@
 ## Purpose
 
 TBD - created by archiving change add-category-settings. Update Purpose after archive.
-
 ## Requirements
-
 ### Requirement: Category Data Model
 
 The system MUST store clothing categories with user isolation and system/user distinction.
@@ -83,38 +81,14 @@ The system MUST allow users to create new custom clothing categories.
 
 The system MUST allow users to delete custom categories with proper safeguards.
 
-#### Scenario: Delete Unused Category
-
-**Given** a custom category "配饰" exists with no associated clothing items
-**When** the user deletes the category and confirms
-**Then** the category should be removed from the database
-**And** the category should no longer appear in any UI
-**And** a success message should be displayed
-
 #### Scenario: Delete Category With Associated Items
 
 **Given** a custom category "配饰" exists with 5 clothing items
 **When** the user deletes the category
 **Then** a warning should be displayed indicating 5 items will be moved to "未分类"
-**And** upon confirmation, all 5 items should have their category set to "未分类"
+**And** upon confirmation, all 5 items should be associated with "未分类"
 **And** the category should be removed from the database
 **And** the items should still be visible in the clothing list under "未分类"
-
-#### Scenario: Prevent Deletion of System Categories
-
-**Given** the user has system categories (上衣, 外套, 下装, 鞋子, 未分类)
-**When** the user attempts to delete a system category
-**Then** the deletion should be prevented
-**And** an error message should indicate system categories cannot be deleted
-**And** the category should remain in the database
-
-#### Scenario: Prevent Deletion of Uncategorized Category
-
-**Given** the "未分类" category exists
-**When** the user attempts to delete the "未分类" category
-**Then** the deletion should be prevented
-**And** an error message should indicate this category is required
-**And** the category should remain in the database
 
 ### Requirement: Category Migration
 
@@ -124,7 +98,7 @@ The system MUST automatically migrate clothing items when their category is dele
 
 **Given** a custom category "配饰" has 3 clothing items
 **When** the category is deleted
-**Then** all 3 clothing items should be updated to have category = "未分类"
+**Then** all 3 clothing items should be associated with "未分类"
 **And** the update should happen in a single transaction
 **And** all items should be successfully migrated
 
@@ -176,3 +150,4 @@ The system MUST display categories consistently across the application.
 **And** filters should be ordered alphabetically
 **And** an "全部" (All) filter should be included
 **And** clicking a category filter should show only items in that category
+

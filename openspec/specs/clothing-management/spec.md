@@ -3,9 +3,7 @@
 ## Purpose
 
 TBD - created by archiving change establish-outfit-platform. Update Purpose after archive.
-
 ## Requirements
-
 ### Requirement: Clothing Item Creation
 
 The system MUST allow users to create new clothing items with required and optional information.
@@ -35,14 +33,14 @@ The system MUST allow users to create new clothing items with required and optio
 
 ### Requirement: Clothing Item Categories
 
-Clothing items MUST be categorized using foreign key references to the clothing_categories table.
+Clothing items MUST be associated with one or more categories via a join table between clothing items and clothing categories.
 
-#### Scenario: Create clothing with category ID
+#### Scenario: Create clothing with multiple category IDs
 
 **Given** the user is on the clothing creation form
-**When** the user selects a category with ID 1
-**Then** the clothing item should be created with category_id=1
-**And** the item should be associated with the correct category
+**When** the user selects category IDs 1 and 3
+**Then** the clothing item should be created successfully
+**And** the clothing item should have associations for category_id=1 and category_id=3
 
 #### Scenario: Category ID validation
 
@@ -332,21 +330,21 @@ Clothing images MUST be displayed optimally on mobile devices.
 
 ### Requirement: Clothing Item Filtering
 
-Clothing items MUST be filterable by category ID.
+Clothing items MUST be filterable by category ID using the clothing-category associations.
 
 #### Scenario: Filter clothing by category ID
 
 **Given** the user is on the clothing list page
 **When** the API is called with `?category=1`
-**Then** only clothing items with category_id=1 should be returned
-**And** results should include category name joined from clothing_categories table
+**Then** only clothing items associated with category_id=1 should be returned
+**And** results should include the primary category name for display
 
 #### Scenario: Get all clothing without filter
 
 **Given** the user is on the clothing list page
 **When** the API is called without category parameter
 **Then** all clothing items should be returned
-**And** results should include category name for each item
+**And** results should include category names for each item
 
 ### Requirement: Database schema migration
 
@@ -418,3 +416,15 @@ The clothing item listing page MUST display additional information about each it
 **When** the user views the clothing list on a mobile device (width < 640px)
 **Then** the description should be displayed with appropriate length limit (e.g., 50 characters)
 **And** all information should remain legible and properly spaced
+
+### Requirement: Clothing Item Category Display
+
+The clothing item list and detail views MUST display all associated category names.
+
+#### Scenario: Display clothing item with multiple categories
+
+**Given** a clothing item is associated with categories "上衣" and "外套"
+**When** the user views the clothing list or detail page
+**Then** both category names should be displayed
+**And** the categories should be visually distinct
+

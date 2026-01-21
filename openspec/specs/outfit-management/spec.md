@@ -3,9 +3,7 @@
 ## Purpose
 
 TBD - created by archiving change establish-outfit-platform. Update Purpose after archive.
-
 ## Requirements
-
 ### Requirement: Outfit Creation
 
 The system MUST allow users to create outfit combinations by selecting multiple clothing items and providing a name.
@@ -406,3 +404,20 @@ The system MUST allow users to filter clothing items by category when selecting 
 **When** the category filter is applied
 **Then** an empty state message should be displayed
 **And** the message should indicate no items exist in this category
+
+### Requirement: Outfit Calendar Associations
+
+The system MUST allow users to associate existing outfits with calendar dates and manage those associations.
+
+#### Scenario: View outfit associations by date
+
+- **GIVEN** the user has associated outfits to a date
+- **WHEN** the user opens the calendar date detail
+- **THEN** the outfits are listed with their names and thumbnails
+
+#### Scenario: Prevent cross-user access
+
+- **GIVEN** another user has outfits
+- **WHEN** a user adds outfits to a date
+- **THEN** only their own outfits are available for association
+
