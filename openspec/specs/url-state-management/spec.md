@@ -3,9 +3,7 @@
 ## Purpose
 
 TBD - created by archiving change add-client-side-routing. Update Purpose after archive.
-
 ## Requirements
-
 ### Requirement: Tab navigation via URL paths
 
 The application SHALL use URL path segments to represent the active tab.
@@ -78,30 +76,13 @@ The application SHALL use URL query parameters with category IDs for filter stat
 
 The application SHALL maintain navigation state when the user refreshes the page.
 
-#### Scenario: User refreshes on clothing tab
+#### Scenario: User refreshes on calendar with month in query
 
-**Given** the user is on the clothing tab
+**Given** the user is on the calendar tab
+**And** the URL is `/calendar?date=2025-03`
 **When** the user refreshes the page
-**Then** the browser should stay on `/clothing`
-**And** the clothing list should be displayed
-**And** the clothing tab should remain active
-
-#### Scenario: User refreshes on clothing list with filter
-
-**Given** the user has filtered clothing by category ID 2 (e.g., "外套")
-**And** the URL is `/clothing?category=2`
-**When** the user refreshes the page
-**Then** the browser should stay on `/clothing?category=2`
-**And** only clothing items with category_id=2 should be displayed
-**And** the category filter button should remain active
-
-#### Scenario: User refreshes on add clothing form
-
-**Given** the user is on the add clothing form
-**And** the URL is `/clothing/new`
-**When** the user refreshes the page
-**Then** the browser should stay on `/clothing/new`
-**And** the add clothing form should be displayed
+**Then** the browser should stay on `/calendar?date=2025-03`
+**And** the calendar should display March 2025
 
 ### Requirement: Root page redirect
 
@@ -210,3 +191,22 @@ The application SHALL use shared layout components for header and navigation acr
 **Then** the navigation should be displayed
 **And** the navigation should be consistent in structure
 **And** the active tab should reflect the current URL path
+
+### Requirement: Calendar month via query parameters
+
+The application SHALL store the current calendar month in the URL query parameter `date`.
+
+#### Scenario: User changes calendar month
+
+**Given** the user is viewing the calendar
+**When** the user navigates to the next or previous month
+**Then** the browser URL should change to `/calendar?date=YYYY-MM`
+**And** the calendar should display the selected month
+
+#### Scenario: User uses browser back button in calendar
+
+**Given** the user navigated from `/calendar?date=2025-03` to `/calendar?date=2025-04`
+**When** the user clicks the browser back button
+**Then** the browser URL should change to `/calendar?date=2025-03`
+**And** the calendar should display March 2025
+

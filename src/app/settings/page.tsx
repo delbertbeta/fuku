@@ -2,6 +2,13 @@
 
 import { useState, useEffect } from "react";
 
+type Category = {
+  id: number;
+  name: string;
+  is_system: number;
+  item_count?: number;
+};
+
 export default function SettingsPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
@@ -14,7 +21,7 @@ export default function SettingsPage() {
 }
 
 function CategoryManagement() {
-  const [categories, setCategories] = useState<any[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
@@ -73,7 +80,7 @@ function CategoryManagement() {
       });
 
       if (response.ok) {
-        const data = await response.json();
+        await response.json();
         loadCategories();
       } else {
         const data = await response.json();
@@ -135,7 +142,7 @@ function CategoryManagement() {
           </div>
         ) : (
           categories.map((category) => {
-            const itemCount = 0;
+            const count = category.item_count ?? 0;
 
             return (
               <div
@@ -156,8 +163,8 @@ function CategoryManagement() {
                     {showDeleteConfirm === category.id ? (
                       <div className="flex items-center gap-2">
                         <span className="text-sm text-orange-600">
-                          {itemCount > 0
-                            ? `将移动 ${itemCount} 件服装到"未分类"`
+                          {count > 0
+                            ? `将移动 ${count} 件服装到"未分类"`
                             : "确认删除？"}
                         </span>
                         <button
@@ -176,7 +183,7 @@ function CategoryManagement() {
                       </div>
                     ) : (
                       <button
-                        onClick={() => confirmDelete(category.id, itemCount)}
+                        onClick={() => confirmDelete(category.id, count)}
                         disabled={deleting !== null}
                         className="px-3 py-1 bg-red-100 text-red-600 rounded-md text-sm hover:bg-red-200 disabled:bg-gray-100 disabled:text-gray-400 min-h-[32px]"
                       >

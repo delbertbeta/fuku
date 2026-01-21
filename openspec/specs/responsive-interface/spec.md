@@ -3,9 +3,7 @@
 ## Purpose
 
 TBD - created by archiving change establish-outfit-platform. Update Purpose after archive.
-
 ## Requirements
-
 ### Requirement: Mobile-First Design
 
 The application MUST be designed with mobile devices as the primary viewport.
@@ -138,7 +136,7 @@ Navigation MUST adapt to the device and screen size.
 **Given** the user is on a mobile device
 **When** the main navigation is displayed
 **Then** navigation should be a bottom tab bar
-**And** there should be tabs for "Clothing" and "Outfits"
+**And** there should be tabs for "Clothing", "Outfits", and "Calendar"
 **And** active tab should be visually distinguished
 
 #### Scenario: Top Navigation (Desktop)
@@ -146,7 +144,7 @@ Navigation MUST adapt to the device and screen size.
 **Given** the user is on a desktop device
 **When** the main navigation is displayed
 **Then** navigation should be a top navigation bar
-**And** there should be navigation links for "Clothing" and "Outfits"
+**And** there should be navigation links for "Clothing", "Outfits", and "Calendar"
 **And** user profile/logout options should be accessible
 
 #### Scenario: Navigation Consistency
@@ -252,3 +250,4 @@ The responsive interface MUST maintain accessibility standards across all viewpo
 **Then** all content should be properly labeled
 **And** alt text should be provided for images
 **And** landmarks should be properly identified
+

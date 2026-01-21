@@ -4,8 +4,16 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
+type ClothingItem = {
+  id: number;
+  name: string;
+  image_path: string;
+  category_names?: string[];
+  category_name?: string | null;
+};
+
 export default function OutfitNewPage() {
-  const [clothingItems, setClothingItems] = useState<any[]>([]);
+  const [clothingItems, setClothingItems] = useState<ClothingItem[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [selectedClothing, setSelectedClothing] = useState<number[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
@@ -54,6 +62,14 @@ export default function OutfitNewPage() {
       setOutfitName("");
       router.push("/outfits");
     }
+  };
+
+  const renderCategories = (item: ClothingItem) => {
+    if (item.category_names && item.category_names.length > 0) {
+      return item.category_names.join(" · ");
+    }
+
+    return item.category_name || "";
   };
 
   return (
@@ -131,7 +147,12 @@ export default function OutfitNewPage() {
                 alt={item.name}
                 className="w-12 h-12 object-cover rounded"
               />
-              <span className="flex-1">{item.name}</span>
+              <div className="flex-1 min-w-0">
+                <span className="block truncate">{item.name}</span>
+                <span className="text-xs text-gray-500 truncate block">
+                  {renderCategories(item)}
+                </span>
+              </div>
             </label>
           ))}
         </div>

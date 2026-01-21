@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
       SELECT o.id, o.name, o.description, o.created_at,
              ci.id as item_id, ci.name as item_name, ci.image_path,
              ci.price, ci.description as item_description,
-             cc.name as category_name
+             cc.name as primary_category_name
       FROM outfits o
       LEFT JOIN outfit_items oi ON o.id = oi.outfit_id
       LEFT JOIN clothing_items ci ON oi.clothing_id = ci.id
@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
           image_path: row.image_path,
           price: row.price,
           description: row.item_description,
-          category_name: row.category_name,
+          category_name: row.primary_category_name,
         });
       }
     }

@@ -21,9 +21,22 @@ export async function GET(request: NextRequest) {
 
     const db = getDb();
     const stmt = db.prepare(
-      "SELECT id, name, is_system, created_at, updated_at FROM clothing_categories WHERE user_id = ? ORDER BY is_system DESC, name ASC"
+      `SELECT cc.id, cc.name, cc.is_system, cc.created_at, cc.updated_at,
+              COUNT(DISTINCT cic.clothing_item_id) as item_count
+       FROM clothing_categories cc
+       LEFT JOIN clothing_item_categories cic ON cc.id = cic.category_id
+       WHERE cc.user_id = ?
+       GROUP BY cc.id
+       ORDER BY cc.is_system DESC, cc.name ASC`
     );
-    const categories = await stmt.all([session.user_id]);
+    const rows = (await stmt.all([session.user_id])) as any[];
+    const categories = rows.map((row) => ({
+      ...row,
+      item_count:
+        typeof row.item_count === "bigint"
+          ? Number(row.item_count)
+          : row.item_count,
+    }));
 
     return NextResponse.json({ categories });
   } catch (error) {

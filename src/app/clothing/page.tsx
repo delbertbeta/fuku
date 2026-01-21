@@ -4,8 +4,19 @@ import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
+type ClothingItem = {
+  id: number;
+  name: string;
+  description?: string | null;
+  image_path: string;
+  price?: number | null;
+  category_names?: string[];
+  category_name?: string | null;
+  category?: number;
+};
+
 function ClothingContent() {
-  const [items, setItems] = useState<any[]>([]);
+  const [items, setItems] = useState<ClothingItem[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const searchParams = useSearchParams();
   const categoryId = searchParams.get("category");
@@ -33,6 +44,29 @@ function ClothingContent() {
     loadCategories();
     loadItems();
   }, [categoryId]);
+
+  const renderCategories = (item: ClothingItem) => {
+    if (item.category_names && item.category_names.length > 0) {
+      return item.category_names.map((name) => (
+        <span
+          key={`${item.id}-${name}`}
+          className="px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 text-xs"
+        >
+          {name}
+        </span>
+      ));
+    }
+
+    if (item.category_name) {
+      return (
+        <span className="px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 text-xs">
+          {item.category_name}
+        </span>
+      );
+    }
+
+    return null;
+  };
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
@@ -86,16 +120,16 @@ function ClothingContent() {
             />
             <div className="p-3">
               <h3 className="font-medium truncate">{item.name}</h3>
-              <p className="text-sm text-gray-500 capitalize">
-                {item.category_name || item.category}
-              </p>
+              <div className="mt-2 flex flex-wrap gap-1">
+                {renderCategories(item)}
+              </div>
               {item.description && (
-                <p className="text-xs text-gray-400 mt-1 truncate">
+                <p className="text-xs text-gray-400 mt-2 truncate">
                   {item.description}
                 </p>
               )}
               {item.price && (
-                <p className="text-sm font-semibold text-blue-600 mt-1">
+                <p className="text-sm font-semibold text-blue-600 mt-2">
                   ¥{item.price.toFixed(2)}
                 </p>
               )}

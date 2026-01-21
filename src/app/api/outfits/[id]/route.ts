@@ -9,6 +9,36 @@ const outfitSchema = z.object({
   clothing_ids: z.array(z.number()).optional(),
 });
 
+async function loadCategoriesForItems(
+  itemIds: number[]
+): Promise<Map<number, { ids: number[]; names: string[] }>> {
+  const db = getDb();
+  if (itemIds.length === 0) {
+    return new Map();
+  }
+
+  const placeholders = itemIds.map(() => "?").join(", ");
+  const stmt = db.prepare(
+    `SELECT cic.clothing_item_id, cc.id as category_id, cc.name as category_name
+     FROM clothing_item_categories cic
+     JOIN clothing_categories cc ON cic.category_id = cc.id
+     WHERE cic.clothing_item_id IN (${placeholders})`
+  );
+  const rows = await stmt.all(itemIds);
+  const map = new Map<number, { ids: number[]; names: string[] }>();
+
+  for (const row of rows as any[]) {
+    if (!map.has(row.clothing_item_id)) {
+      map.set(row.clothing_item_id, { ids: [], names: [] });
+    }
+    const entry = map.get(row.clothing_item_id);
+    entry?.ids.push(row.category_id);
+    entry?.names.push(row.category_name);
+  }
+
+  return map;
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -41,13 +71,28 @@ export async function GET(
     }
 
     const clothingStmt = db.prepare(
-      `SELECT ci.*
+      `SELECT ci.*, cc.name as primary_category_name
        FROM clothing_items ci
        JOIN outfit_items oi ON ci.id = oi.clothing_id
+       LEFT JOIN clothing_categories cc ON ci.category = cc.id
        WHERE oi.outfit_id = ?`
     );
-    const clothingItems = await clothingStmt.all([idNum]);
-    (outfit as any).clothing_items = clothingItems;
+    const clothingItems = (await clothingStmt.all([idNum])) as any[];
+    const categoriesByItem = await loadCategoriesForItems(
+      clothingItems.map((item) => item.id)
+    );
+
+    (outfit as any).clothing_items = clothingItems.map((item) => {
+      const categoryInfo = categoriesByItem.get(item.id);
+      const ids = categoryInfo?.ids ?? [];
+      const names = categoryInfo?.names ?? [];
+      return {
+        ...item,
+        category_name: item.primary_category_name || null,
+        category_ids: ids,
+        category_names: names,
+      };
+    });
 
     return NextResponse.json({ outfit });
   } catch (error) {

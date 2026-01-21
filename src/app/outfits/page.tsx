@@ -41,6 +41,29 @@ export default function OutfitsPage() {
     }
   };
 
+  const renderCategories = (item: any) => {
+    if (item.category_names && item.category_names.length > 0) {
+      return item.category_names.map((name: string) => (
+        <span
+          key={`${item.id}-${name}`}
+          className="px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 text-xs"
+        >
+          {name}
+        </span>
+      ));
+    }
+
+    if (item.category_name) {
+      return (
+        <span className="px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 text-xs">
+          {item.category_name}
+        </span>
+      );
+    }
+
+    return null;
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
       <div className="flex justify-between items-center mb-6">
@@ -58,7 +81,7 @@ export default function OutfitsPage() {
           <Link
             key={outfit.id}
             href={`/outfits/${outfit.id}`}
-            className="border rounded-lg p-4 hover:border-blue-500 hover:shadow-lg hover:scale-105 cursor-pointer transition-all duration-200"
+            className="border rounded-lg p-4 hover:border-blue-500 hover:shadow-lg cursor-pointer transition-all duration-200"
           >
             <h3 className="font-bold text-lg mb-2">{outfit.name}</h3>
             {outfit.description && (
@@ -73,11 +96,9 @@ export default function OutfitsPage() {
                     className="w-full aspect-square object-cover rounded-md"
                   />
                   <p className="text-xs mt-1 truncate">{item.name}</p>
-                  {item.category_name && (
-                    <p className="text-xs text-gray-500">
-                      {item.category_name}
-                    </p>
-                  )}
+                  <div className="flex flex-wrap gap-1 justify-center mt-1">
+                    {renderCategories(item)}
+                  </div>
                   {item.price && (
                     <p className="text-xs font-semibold text-blue-600">
                       ¥{item.price.toFixed(2)}
