@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { getDb, helpers } from "@/lib/db";
 import { uploadImage } from "@/lib/storage";
+import { normalizePrice } from "@/lib/utils/normalizePrice";
 import sharp from "sharp";
 
 function parseCategoryIds(values: Array<string | number>): number[] {
@@ -106,6 +107,7 @@ export async function GET(request: NextRequest) {
 
       return {
         ...item,
+        price: normalizePrice(item.price),
         category_name: item.primary_category_name || null,
         category_ids: ids,
         category_names: names,
@@ -226,6 +228,7 @@ export async function POST(request: NextRequest) {
       {
         item: {
           ...item,
+          price: normalizePrice(item.price),
           category_name:
             categoryRows.find((row) => row.id === primaryCategoryId)?.name ||
             null,

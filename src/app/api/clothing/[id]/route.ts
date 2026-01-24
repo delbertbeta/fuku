@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { getDb, helpers } from "@/lib/db";
 import { uploadImage } from "@/lib/storage";
+import { normalizePrice } from "@/lib/utils/normalizePrice";
 import { z } from "zod";
 import sharp from "sharp";
 
@@ -94,6 +95,7 @@ export async function GET(
     return NextResponse.json({
       item: {
         ...item,
+        price: normalizePrice(item.price),
         category_name: item.primary_category_name || null,
         category_ids: categoryIds,
         category_names: categoryNames,
@@ -242,6 +244,7 @@ export async function PUT(
     return NextResponse.json({
       item: {
         ...item,
+        price: normalizePrice(item.price),
         category_ids: categories.ids,
         category_names: categories.names,
       },

@@ -362,7 +362,7 @@ export default function OutfitDetailPage() {
           <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
             <h3 className="text-lg font-bold mb-4">确认删除</h3>
             <p className="mb-6">
-              确定要删除"{outfit?.name}"吗？此操作无法撤销。
+              确定要删除&quot;{outfit?.name}&quot;吗？此操作无法撤销。
             </p>
             <div className="flex gap-2">
               <button

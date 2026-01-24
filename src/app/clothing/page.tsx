@@ -3,13 +3,14 @@
 import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { normalizePrice } from "@/lib/utils/normalizePrice";
 
 type ClothingItem = {
   id: number;
   name: string;
   description?: string | null;
   image_path: string;
-  price?: number | null;
+  price?: number | string | null;
   category_names?: string[];
   category_name?: string | null;
   category?: number;
@@ -107,35 +108,39 @@ function ClothingContent() {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {items.map((item) => (
-          <Link
-            key={item.id}
-            href={`/clothing/${item.id}`}
-            className="border rounded-lg overflow-hidden hover:border-blue-500 hover:shadow-lg hover:scale-105 cursor-pointer transition-all duration-200"
-          >
-            <img
-              src={item.image_path}
-              alt={item.name}
-              className="w-full aspect-square object-cover"
-            />
-            <div className="p-3">
-              <h3 className="font-medium truncate">{item.name}</h3>
-              <div className="mt-2 flex flex-wrap gap-1">
-                {renderCategories(item)}
+        {items.map((item) => {
+          const price = normalizePrice(item.price);
+
+          return (
+            <Link
+              key={item.id}
+              href={`/clothing/${item.id}`}
+              className="border rounded-lg overflow-hidden hover:border-blue-500 hover:shadow-lg hover:scale-105 cursor-pointer transition-all duration-200"
+            >
+              <img
+                src={item.image_path}
+                alt={item.name}
+                className="w-full aspect-square object-cover"
+              />
+              <div className="p-3">
+                <h3 className="font-medium truncate">{item.name}</h3>
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {renderCategories(item)}
+                </div>
+                {item.description && (
+                  <p className="text-xs text-gray-400 mt-2 truncate">
+                    {item.description}
+                  </p>
+                )}
+                {price != null && (
+                  <p className="text-sm font-semibold text-blue-600 mt-2">
+                    ¥{price.toFixed(2)}
+                  </p>
+                )}
               </div>
-              {item.description && (
-                <p className="text-xs text-gray-400 mt-2 truncate">
-                  {item.description}
-                </p>
-              )}
-              {item.price && (
-                <p className="text-sm font-semibold text-blue-600 mt-2">
-                  ¥{item.price.toFixed(2)}
-                </p>
-              )}
-            </div>
-          </Link>
-        ))}
+            </Link>
+          );
+        })}
       </div>
 
       {items.length === 0 && (

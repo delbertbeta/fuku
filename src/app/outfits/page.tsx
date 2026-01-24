@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { normalizePrice } from "@/lib/utils/normalizePrice";
 
 export default function OutfitsPage() {
   const [outfits, setOutfits] = useState<any[]>([]);
@@ -88,24 +89,28 @@ export default function OutfitsPage() {
               <p className="text-gray-500 mb-3">{outfit.description}</p>
             )}
             <div className="grid grid-cols-2 gap-2">
-              {outfit.clothing_items?.map((item: any) => (
-                <div key={item.id} className="text-center">
-                  <img
-                    src={item.image_path}
-                    alt={item.name}
-                    className="w-full aspect-square object-cover rounded-md"
-                  />
-                  <p className="text-xs mt-1 truncate">{item.name}</p>
-                  <div className="flex flex-wrap gap-1 justify-center mt-1">
-                    {renderCategories(item)}
+              {outfit.clothing_items?.map((item: any) => {
+                const price = normalizePrice(item.price);
+
+                return (
+                  <div key={item.id} className="text-center">
+                    <img
+                      src={item.image_path}
+                      alt={item.name}
+                      className="w-full aspect-square object-cover rounded-md"
+                    />
+                    <p className="text-xs mt-1 truncate">{item.name}</p>
+                    <div className="flex flex-wrap gap-1 justify-center mt-1">
+                      {renderCategories(item)}
+                    </div>
+                    {price != null && (
+                      <p className="text-xs font-semibold text-blue-600">
+                        ¥{price.toFixed(2)}
+                      </p>
+                    )}
                   </div>
-                  {item.price && (
-                    <p className="text-xs font-semibold text-blue-600">
-                      ¥{item.price.toFixed(2)}
-                    </p>
-                  )}
-                </div>
-              ))}
+                );
+              })}
             </div>
           </Link>
         ))}

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { getDb, helpers } from "@/lib/db";
+import { normalizePrice } from "@/lib/utils/normalizePrice";
 import { z } from "zod";
 
 const outfitSchema = z.object({
@@ -53,7 +54,7 @@ export async function GET(request: NextRequest) {
           id: row.item_id,
           name: row.item_name,
           image_path: row.image_path,
-          price: row.price,
+          price: normalizePrice(row.price),
           description: row.item_description,
           category_name: row.primary_category_name,
         });
